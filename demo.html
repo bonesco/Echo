@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Demo page for Webflow Debug Console - test all features">
+  <title>Webflow Debug Console - Demo Page</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      color: white;
+      margin-bottom: 60px;
+    }
+
+    h1 {
+      font-size: 48px;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 20px;
+      opacity: 0.9;
+      margin-bottom: 32px;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 16px 32px;
+      background: white;
+      color: #667eea;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 18px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      font-size: 28px;
+      margin-bottom: 16px;
+      color: #667eea;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .feature {
+      padding: 20px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border-radius: 8px;
+    }
+
+    .feature h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: #667eea;
+    }
+
+    .feature p {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    /* Intentional issues for testing */
+    .test-overflow {
+      width: 2000px;
+      background: #ffebee;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .high-zindex {
+      position: relative;
+      z-index: 99999;
+    }
+
+    code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+    }
+
+    .keyboard-shortcut {
+      display: inline-block;
+      padding: 8px 12px;
+      background: #667eea;
+      color: white;
+      border-radius: 6px;
+      font-family: monospace;
+      margin: 8px 4px;
+    }
+
+    footer {
+      text-align: center;
+      color: white;
+      margin-top: 60px;
+      padding-top: 40px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔍 Webflow Debug Console</h1>
+      <p class="subtitle">A sophisticated debugging tool for Webflow websites</p>
+      <a href="#" class="cta-button" onclick="loadDebugConsole(); return false;">
+        Launch Debug Console
+      </a>
+      <div style="margin-top: 16px;">
+        <p style="font-size: 14px; opacity: 0.8;">
+          Or press <span class="keyboard-shortcut">Cmd/Ctrl + Shift + D</span>
+        </p>
+      </div>
+    </header>
+
+    <div class="card">
+      <h2>How to Use</h2>
+      <ol style="line-height: 2; margin-left: 24px;">
+        <li>Click the "Launch Debug Console" button above</li>
+        <li>Wait for the glassmorphic console to appear</li>
+        <li>Explore the different tabs to see various audits</li>
+        <li>Click on issues to highlight elements on the page</li>
+        <li>Export a comprehensive HTML report</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>Features Overview</h2>
+      <div class="feature-grid">
+        <div class="feature">
+          <h3>⚡ Performance</h3>
+          <p>Track Core Web Vitals, page load time, and resource breakdown</p>
+        </div>
+        <div class="feature">
+          <h3>🐛 Error Tracking</h3>
+          <p>Real-time JavaScript error capture with stack traces</p>
+        </div>
+        <div class="feature">
+          <h3>♿ Accessibility</h3>
+          <p>Detect missing alt tags, labels, and ARIA attributes</p>
+        </div>
+        <div class="feature">
+          <h3>🔎 SEO</h3>
+          <p>Audit meta tags, headings, and image optimization</p>
+        </div>
+        <div class="feature">
+          <h3>🌐 Network</h3>
+          <p>Monitor HTTP requests, failed loads, and slow assets</p>
+        </div>
+        <div class="feature">
+          <h3>🎨 CSS/Layout</h3>
+          <p>Find overflow issues, z-index conflicts, and more</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Test Elements</h2>
+      <p>This page intentionally contains various issues for testing:</p>
+
+      <!-- Missing alt tag -->
+      <img src="https://via.placeholder.com/150" style="margin: 16px 0;">
+
+      <!-- Button without label -->
+      <button style="padding: 12px; margin: 16px 0;">Click</button>
+
+      <!-- Form without label -->
+      <form style="margin: 16px 0;">
+        <input type="text" placeholder="Name">
+        <input type="email" placeholder="Email">
+      </form>
+
+      <!-- Multiple H1s (bad for SEO) -->
+      <h1>Another H1 Tag</h1>
+
+      <!-- Broken image -->
+      <img src="https://broken-url.example.com/image.jpg" alt="Broken image">
+
+      <!-- Element causing horizontal scroll -->
+      <!-- <div class="test-overflow">This element is very wide and causes horizontal scroll</div> -->
+    </div>
+
+    <div class="card">
+      <h2>Installation Methods</h2>
+
+      <h3>1. Bookmarklet</h3>
+      <p>Create a bookmark with this code:</p>
+      <code style="display: block; padding: 12px; overflow-x: auto; margin: 8px 0;">
+        javascript:(function(){...bookmarklet code...})();
+      </code>
+
+      <h3 style="margin-top: 24px;">2. Browser Console</h3>
+      <p>Copy and paste <code>webflow-debug-console.js</code> into your browser console</p>
+
+      <h3 style="margin-top: 24px;">3. Script Tag</h3>
+      <p>Add to your Webflow custom code:</p>
+      <code style="display: block; padding: 12px; margin: 8px 0;">
+        &lt;script src="https://your-cdn.com/webflow-debug-console.js"&gt;&lt;/script&gt;
+      </code>
+    </div>
+
+    <footer>
+      <p>&copy; 2024 Webflow Debug Console</p>
+      <p style="margin-top: 8px; font-size: 14px; opacity: 0.8;">
+        Made with ❤️ for the Webflow community
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    // Function to load the debug console
+    function loadDebugConsole() {
+      if (window.__WEBFLOW_DEBUG_CONSOLE__) {
+        alert('Debug console is already active! Press Cmd/Ctrl + Shift + D to toggle.');
+        return;
+      }
+
+      // Load the script
+      fetch('webflow-debug-console.js')
+        .then(response => response.text())
+        .then(code => {
+          const script = document.createElement('script');
+          script.textContent = code;
+          document.head.appendChild(script);
+          console.log('✅ Webflow Debug Console loaded successfully!');
+        })
+        .catch(error => {
+          console.error('Failed to load debug console:', error);
+          alert('Failed to load debug console. Make sure webflow-debug-console.js is in the same directory.');
+        });
+    }
+
+    // Simulate some errors for testing
+    setTimeout(() => {
+      // This will be caught by the error tracker
+      // console.error('Test error: This is a simulated error for testing');
+    }, 2000);
+
+    // Add keyboard shortcut listener
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Demo page loaded. Click the button or press Cmd/Ctrl + Shift + D to launch the debug console.');
+    });
+  </script>
+</body>
+</html>
