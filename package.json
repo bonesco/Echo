@@ -1,12 +1,15 @@
 {
   "name": "webflow-debug-console",
-  "version": "1.0.0",
-  "description": "A sophisticated, production-ready debugging tool for Webflow websites with a modern glassmorphic UI",
+  "version": "2.0.0",
+  "description": "A sophisticated, production-ready debugging tool for Webflow websites with advanced monitoring features including GSAP tracking, video performance, click analytics, and memory leak detection",
   "main": "webflow-debug-console.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "serve": "python -m http.server 8000",
-    "build": "terser webflow-debug-console.js -c -m -o webflow-debug-console.min.js"
+    "build:basic": "terser webflow-debug-console.js -c -m -o webflow-debug-console.min.js",
+    "build:pro": "terser webflow-monitor-pro.js -c -m -o webflow-monitor-pro.min.js",
+    "build": "npm run build:basic && npm run build:pro",
+    "demo": "python -m http.server 8000"
   },
   "keywords": [
     "webflow",
@@ -20,7 +23,17 @@
     "console",
     "web-vitals",
     "lighthouse",
-    "bookmarklet"
+    "bookmarklet",
+    "gsap",
+    "animation",
+    "fps",
+    "memory-leak",
+    "click-tracking",
+    "scroll-depth",
+    "video-performance",
+    "dom-performance",
+    "monitoring",
+    "analytics"
   ],
   "author": "Webflow Debug Console Team",
   "license": "MIT",
@@ -38,7 +51,10 @@
   "files": [
     "webflow-debug-console.js",
     "webflow-debug-console.min.js",
+    "webflow-monitor-pro.js",
+    "webflow-monitor-pro.min.js",
     "bookmarklet.js",
-    "README.md"
+    "README.md",
+    "README-PRO.md"
   ]
 }

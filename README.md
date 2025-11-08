@@ -3,7 +3,36 @@
 A sophisticated, production-ready debugging tool for Webflow websites with a modern, high-end UI inspired by Linear and Raycast.
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Pro Version](https://img.shields.io/badge/pro-2.0.0-purple.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
+
+---
+
+## 🚀 Two Versions Available
+
+### **Basic Console** (`webflow-debug-console.js`)
+Perfect for quick debugging and general site audits. Includes essential features:
+- Performance monitoring (Core Web Vitals)
+- Error tracking
+- Accessibility & SEO audits
+- Network monitoring
+- **Best for:** Quick debugging, client reviews, basic audits
+
+### **Monitor Pro** (`webflow-monitor-pro.js`) ⭐ NEW
+Enterprise-grade monitoring with advanced features:
+- Everything in Basic, PLUS:
+- ✨ GSAP animation monitoring
+- 🎬 Video performance tracking (Vimeo/YouTube)
+- 🖱️ Click analytics (rage & dead clicks)
+- 📊 Real-time FPS counter
+- 💾 Memory leak detection
+- 🌳 DOM performance tracking
+- 📦 Script analysis & duplicate detection
+- **Best for:** Professional development, performance optimization, user behavior analysis
+
+👉 **[Read Pro Documentation](README-PRO.md)**
+
+---
 
 ## Features
 
