@@ -1,0 +1,44 @@
+{
+  "name": "webflow-debug-console",
+  "version": "1.0.0",
+  "description": "A sophisticated, production-ready debugging tool for Webflow websites with a modern glassmorphic UI",
+  "main": "webflow-debug-console.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "python -m http.server 8000",
+    "build": "terser webflow-debug-console.js -c -m -o webflow-debug-console.min.js"
+  },
+  "keywords": [
+    "webflow",
+    "debug",
+    "debugging",
+    "performance",
+    "accessibility",
+    "seo",
+    "audit",
+    "devtools",
+    "console",
+    "web-vitals",
+    "lighthouse",
+    "bookmarklet"
+  ],
+  "author": "Webflow Debug Console Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/webflow-debug-console.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/webflow-debug-console/issues"
+  },
+  "homepage": "https://github.com/yourusername/webflow-debug-console#readme",
+  "devDependencies": {
+    "terser": "^5.0.0"
+  },
+  "files": [
+    "webflow-debug-console.js",
+    "webflow-debug-console.min.js",
+    "bookmarklet.js",
+    "README.md"
+  ]
+}
