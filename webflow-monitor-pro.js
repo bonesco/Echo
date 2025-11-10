@@ -123,6 +123,23 @@
             diagnostics: []
           },
           recommendations: []
+        },
+        issues: {
+          all: [], // Consolidated issues with severity
+          byType: {
+            critical: [],
+            high: [],
+            medium: [],
+            low: []
+          },
+          patterns: [], // Detected anti-patterns
+          resources: {
+            byVendor: {},
+            blocking: [],
+            large: [],
+            duplicate: []
+          },
+          fixes: [] // AI-generated fix suggestions
         }
       };
 
@@ -192,6 +209,9 @@
 
       // Start continuous monitoring
       this.startMonitoring();
+
+      // Run AI Issue Detective
+      setTimeout(() => this.analyzeIssues(), 2000); // Run after 2 seconds to collect initial data
 
       // Initial render
       this.updateUI();
@@ -681,6 +701,7 @@
         </div>
         <div class="wm-tabs">
           <button class="wm-tab active" data-tab="overview">Overview</button>
+          <button class="wm-tab" data-tab="issues">🎯 Issues <span class="wm-tab-badge">0</span></button>
           <button class="wm-tab" data-tab="performance">Performance</button>
           <button class="wm-tab" data-tab="gsap">GSAP <span class="wm-tab-badge info">0</span></button>
           <button class="wm-tab" data-tab="videos">Videos <span class="wm-tab-badge info">0</span></button>
@@ -844,6 +865,7 @@
      */
     updateBadges() {
       const badges = {
+        issues: this.data.issues.all.length,
         gsap: this.data.gsap.timelines.length + this.data.gsap.scrollTriggers.length,
         videos: this.data.videos.length,
         errors: this.data.errors.length
@@ -868,6 +890,9 @@
       switch(tabName) {
         case 'overview':
           content.innerHTML = this.renderOverview();
+          break;
+        case 'issues':
+          content.innerHTML = this.renderIssues();
           break;
         case 'performance':
           content.innerHTML = this.renderPerformance();
@@ -1698,6 +1723,173 @@
       `;
     }
 
+    renderIssues() {
+      const issues = this.data.issues;
+      const totalIssues = issues.all.length;
+
+      // Helper function to get severity color
+      const getSeverityColor = (severity) => {
+        const colors = {
+          critical: '#EF4444',
+          high: '#F59E0B',
+          medium: '#F59E0B',
+          low: '#6B7280'
+        };
+        return colors[severity] || '#6B7280';
+      };
+
+      // Helper function to get severity icon
+      const getSeverityIcon = (severity) => {
+        const icons = {
+          critical: '🔴',
+          high: '🟠',
+          medium: '🟡',
+          low: '⚪'
+        };
+        return icons[severity] || '⚪';
+      };
+
+      return `
+        <div class="wm-card">
+          <div class="wm-card-title">🎯 AI Issue Detective</div>
+
+          ${totalIssues === 0 ? `
+            <div style="padding: 40px; text-align: center;">
+              <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+              <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #10B981;">No Critical Issues Detected</div>
+              <div style="color: #94A3B8;">AI analysis found your site is performing well</div>
+              <button class="wm-btn wm-btn-primary" onclick="window.webflowMonitor.analyzeIssues()" style="margin-top: 20px;">
+                🔄 Re-analyze
+              </button>
+            </div>
+          ` : `
+            <!-- Issue Summary -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
+              <div style="background: rgba(239, 68, 68, 0.1); padding: 16px; border-radius: 8px; border-left: 3px solid #EF4444;">
+                <div style="font-size: 24px; font-weight: 700; color: #EF4444;">${issues.byType.critical.length}</div>
+                <div style="font-size: 12px; color: #94A3B8; margin-top: 4px;">Critical</div>
+              </div>
+              <div style="background: rgba(245, 158, 11, 0.1); padding: 16px; border-radius: 8px; border-left: 3px solid #F59E0B;">
+                <div style="font-size: 24px; font-weight: 700; color: #F59E0B;">${issues.byType.high.length}</div>
+                <div style="font-size: 12px; color: #94A3B8; margin-top: 4px;">High Priority</div>
+              </div>
+              <div style="background: rgba(245, 158, 11, 0.1); padding: 16px; border-radius: 8px; border-left: 3px solid #F59E0B;">
+                <div style="font-size: 24px; font-weight: 700; color: #F59E0B;">${issues.byType.medium.length}</div>
+                <div style="font-size: 12px; color: #94A3B8; margin-top: 4px;">Medium</div>
+              </div>
+              <div style="background: rgba(107, 114, 128, 0.1); padding: 16px; border-radius: 8px; border-left: 3px solid #6B7280;">
+                <div style="font-size: 24px; font-weight: 700; color: #94A3B8;">${issues.byType.low.length}</div>
+                <div style="font-size: 12px; color: #94A3B8; margin-top: 4px;">Low Priority</div>
+              </div>
+            </div>
+
+            <!-- Critical Issues First -->
+            ${issues.byType.critical.length > 0 ? `
+              <div style="margin-bottom: 24px;">
+                <div style="font-weight: 600; margin-bottom: 12px; font-size: 15px; color: #EF4444;">🔴 Critical Issues</div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                  ${issues.byType.critical.map(issue => `
+                    <div style="background: rgba(239, 68, 68, 0.05); padding: 16px; border-radius: 8px; border-left: 3px solid #EF4444;">
+                      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                        <div>
+                          <div style="font-weight: 600; margin-bottom: 4px;">${this.escapeHtml(issue.title)}</div>
+                          <div style="color: #CBD5E1; font-size: 13px; margin-bottom: 8px;">${this.escapeHtml(issue.description)}</div>
+                        </div>
+                        ${issue.source ? `<div style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap;">${this.escapeHtml(issue.source)}</div>` : ''}
+                      </div>
+                      ${issue.fix ? `
+                        <div style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 6px; border-left: 2px solid #10B981; margin-top: 8px;">
+                          <div style="font-size: 12px; font-weight: 600; color: #10B981; margin-bottom: 4px;">💡 AI Suggestion:</div>
+                          <div style="color: #CBD5E1; font-size: 13px;">${this.escapeHtml(issue.fix)}</div>
+                        </div>
+                      ` : ''}
+                      ${issue.impact ? `<div style="color: #94A3B8; font-size: 12px; margin-top: 8px; font-style: italic;">Impact: ${this.escapeHtml(issue.impact)}</div>` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- High Priority Issues -->
+            ${issues.byType.high.length > 0 ? `
+              <div style="margin-bottom: 24px;">
+                <div style="font-weight: 600; margin-bottom: 12px; font-size: 15px; color: #F59E0B;">🟠 High Priority Issues</div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                  ${issues.byType.high.map(issue => `
+                    <div style="background: rgba(245, 158, 11, 0.05); padding: 16px; border-radius: 8px; border-left: 3px solid #F59E0B;">
+                      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                        <div>
+                          <div style="font-weight: 600; margin-bottom: 4px;">${this.escapeHtml(issue.title)}</div>
+                          <div style="color: #CBD5E1; font-size: 13px; margin-bottom: 8px;">${this.escapeHtml(issue.description)}</div>
+                        </div>
+                        ${issue.source ? `<div style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap;">${this.escapeHtml(issue.source)}</div>` : ''}
+                      </div>
+                      ${issue.fix ? `
+                        <div style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 6px; border-left: 2px solid #10B981; margin-top: 8px;">
+                          <div style="font-size: 12px; font-weight: 600; color: #10B981; margin-bottom: 4px;">💡 AI Suggestion:</div>
+                          <div style="color: #CBD5E1; font-size: 13px;">${this.escapeHtml(issue.fix)}</div>
+                        </div>
+                      ` : ''}
+                      ${issue.impact ? `<div style="color: #94A3B8; font-size: 12px; margin-top: 8px; font-style: italic;">Impact: ${this.escapeHtml(issue.impact)}</div>` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Anti-Patterns Detected -->
+            ${issues.patterns.length > 0 ? `
+              <div style="margin-bottom: 24px;">
+                <div style="font-weight: 600; margin-bottom: 12px; font-size: 15px;">⚠️ Anti-Patterns Detected</div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  ${issues.patterns.map(pattern => `
+                    <div style="background: rgba(30, 41, 59, 0.5); padding: 12px; border-radius: 6px; border-left: 2px solid #F59E0B;">
+                      <div style="font-weight: 500; margin-bottom: 4px;">${this.escapeHtml(pattern.name)}</div>
+                      <div style="color: #94A3B8; font-size: 12px;">${this.escapeHtml(pattern.description)}</div>
+                      ${pattern.occurrences ? `<div style="color: #64748B; font-size: 11px; margin-top: 4px;">Found ${pattern.occurrences} time(s)</div>` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Resource Attribution -->
+            ${Object.keys(issues.resources.byVendor).length > 0 ? `
+              <div style="margin-bottom: 24px;">
+                <div style="font-weight: 600; margin-bottom: 12px; font-size: 15px;">📦 Resource Attribution</div>
+                <table class="wm-table">
+                  <thead>
+                    <tr>
+                      <th>Vendor/Source</th>
+                      <th>Scripts</th>
+                      <th>Total Size</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${Object.entries(issues.resources.byVendor).map(([vendor, data]) => `
+                      <tr>
+                        <td style="font-weight: 500;">${this.escapeHtml(vendor)}</td>
+                        <td>${data.count}</td>
+                        <td>${this.formatBytes(data.size)}</td>
+                        <td>
+                          ${data.blocking > 0 ? `<span style="color: #EF4444;">⚠️ ${data.blocking} blocking</span>` : '<span style="color: #10B981;">✓</span>'}
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            ` : ''}
+
+            <button class="wm-btn wm-btn-primary" onclick="window.webflowMonitor.analyzeIssues()" style="width: 100%;">
+              🔄 Re-analyze Issues
+            </button>
+          `}
+        </div>
+      `;
+    }
+
     renderConsole() {
       return `
         <div class="wm-card">
@@ -2048,6 +2240,332 @@
       }
 
       this.data.pageSpeed.recommendations = recommendations;
+    }
+
+    /**
+     * AI-Powered Issue Analysis
+     * Analyzes site for issues, patterns, and generates fixes
+     */
+    analyzeIssues() {
+      console.log('%c🤖 Running AI Issue Detective...', 'color: #6366F1; font-weight: bold;');
+
+      // Reset issues
+      this.data.issues.all = [];
+      this.data.issues.byType = { critical: [], high: [], medium: [], low: [] };
+      this.data.issues.patterns = [];
+      this.data.issues.resources.byVendor = {};
+      this.data.issues.fixes = [];
+
+      // 1. ANALYZE ERRORS WITH SOURCE ATTRIBUTION
+      this.data.errors.forEach(error => {
+        const source = this.attributeErrorSource(error);
+        const severity = this.categorizeErrorSeverity(error);
+        const fix = this.generateErrorFix(error);
+
+        const issue = {
+          type: 'error',
+          severity,
+          title: error.message || 'JavaScript Error',
+          description: error.stack ? error.stack.split('\n')[0] : error.message,
+          source,
+          fix,
+          impact: this.getErrorImpact(error)
+        };
+
+        this.data.issues.all.push(issue);
+        this.data.issues.byType[severity].push(issue);
+      });
+
+      // 2. ANALYZE PERFORMANCE ISSUES
+      const perf = this.data.performance;
+
+      if (perf.lcp > 2500) {
+        this.data.issues.all.push({
+          type: 'performance',
+          severity: perf.lcp > 4000 ? 'critical' : 'high',
+          title: 'Slow Largest Contentful Paint (LCP)',
+          description: `LCP is ${Math.round(perf.lcp)}ms (should be < 2500ms)`,
+          source: 'Performance Metrics',
+          fix: 'Optimize images, reduce server response time, and eliminate render-blocking resources. Use WebP format for images and lazy loading.',
+          impact: 'Users experience slow page loading, affecting engagement and SEO'
+        });
+        this.data.issues.byType[perf.lcp > 4000 ? 'critical' : 'high'].push(this.data.issues.all[this.data.issues.all.length - 1]);
+      }
+
+      if (perf.cls > 0.1) {
+        this.data.issues.all.push({
+          type: 'performance',
+          severity: perf.cls > 0.25 ? 'high' : 'medium',
+          title: 'Poor Cumulative Layout Shift (CLS)',
+          description: `CLS is ${perf.cls.toFixed(3)} (should be < 0.1)`,
+          source: 'Performance Metrics',
+          fix: 'Add explicit width/height to images and embeds. Reserve space for ads. Avoid inserting content above existing content.',
+          impact: 'Elements shift during load, causing accidental clicks and poor UX'
+        });
+        this.data.issues.byType[perf.cls > 0.25 ? 'high' : 'medium'].push(this.data.issues.all[this.data.issues.all.length - 1]);
+      }
+
+      if (perf.fid > 100) {
+        this.data.issues.all.push({
+          type: 'performance',
+          severity: 'high',
+          title: 'Slow First Input Delay (FID)',
+          description: `FID is ${Math.round(perf.fid)}ms (should be < 100ms)`,
+          source: 'Performance Metrics',
+          fix: 'Break up long JavaScript tasks, optimize third-party scripts, and use web workers for heavy computations.',
+          impact: 'Page feels unresponsive to user interactions'
+        });
+        this.data.issues.byType.high.push(this.data.issues.all[this.data.issues.all.length - 1]);
+      }
+
+      // 3. DETECT ANTI-PATTERNS
+      this.detectAntiPatterns();
+
+      // 4. ANALYZE RESOURCES BY VENDOR
+      this.analyzeResourcesByVendor();
+
+      // 5. CHECK FOR MEMORY LEAKS
+      if (this.data.memory.leaks.length > 0) {
+        this.data.issues.all.push({
+          type: 'memory',
+          severity: 'high',
+          title: 'Memory Leak Detected',
+          description: `Detected ${this.data.memory.leaks.length} potential memory leak(s)`,
+          source: 'Memory Monitor',
+          fix: 'Check for event listeners not being removed, circular references, and detached DOM nodes. Use browser DevTools Memory profiler.',
+          impact: 'Page becomes slower over time, eventually causing crashes'
+        });
+        this.data.issues.byType.high.push(this.data.issues.all[this.data.issues.all.length - 1]);
+      }
+
+      // 6. CHECK ACCESSIBILITY ISSUES
+      if (this.data.accessibility.length > 0) {
+        const criticalA11y = this.data.accessibility.filter(a =>
+          a.type === 'error' || a.message.includes('missing alt') || a.message.includes('contrast')
+        ).length;
+
+        if (criticalA11y > 0) {
+          this.data.issues.all.push({
+            type: 'accessibility',
+            severity: 'high',
+            title: `${this.data.accessibility.length} Accessibility Issue(s)`,
+            description: `${criticalA11y} critical a11y violations found`,
+            source: 'Accessibility Audit',
+            fix: 'Add alt text to all images, ensure proper heading hierarchy, improve color contrast, and add ARIA labels where needed.',
+            impact: 'Site is difficult or impossible to use for users with disabilities'
+          });
+          this.data.issues.byType.high.push(this.data.issues.all[this.data.issues.all.length - 1]);
+        }
+      }
+
+      // 7. CHECK FOR LARGE RESOURCES
+      const largeScripts = this.data.scripts.loaded.filter(s => s.size > 500000); // > 500KB
+      if (largeScripts.length > 0) {
+        this.data.issues.all.push({
+          type: 'resource',
+          severity: 'medium',
+          title: `${largeScripts.length} Large Script(s) Detected`,
+          description: `Scripts larger than 500KB slow down your site`,
+          source: 'Resource Analysis',
+          fix: 'Use code splitting, lazy loading, and tree shaking. Consider switching to lighter alternatives or loading scripts on-demand.',
+          impact: 'Increased page load time and data usage'
+        });
+        this.data.issues.byType.medium.push(this.data.issues.all[this.data.issues.all.length - 1]);
+      }
+
+      console.log('%c✅ AI Issue Detective complete!', 'color: #10B981; font-weight: bold;');
+      console.log(`%c   Found ${this.data.issues.all.length} issues (${this.data.issues.byType.critical.length} critical, ${this.data.issues.byType.high.length} high)`, 'color: #94A3B8');
+
+      this.updateUI();
+    }
+
+    /**
+     * Attribute error to source file/vendor
+     */
+    attributeErrorSource(error) {
+      if (!error.stack) return 'Unknown';
+
+      const stack = error.stack;
+
+      // Try to extract filename from stack trace
+      const fileMatch = stack.match(/https?:\/\/([^\/]+)\/([^\s:)]+)/);
+      if (fileMatch) {
+        const domain = fileMatch[1];
+        const filename = fileMatch[2].split('/').pop();
+
+        // Categorize by known vendors
+        if (domain.includes('webflow')) return 'Webflow';
+        if (domain.includes('google')) return 'Google';
+        if (domain.includes('facebook') || domain.includes('fb')) return 'Facebook';
+        if (domain.includes('analytics')) return 'Analytics';
+        if (domain.includes('jquery')) return 'jQuery';
+
+        return filename || domain;
+      }
+
+      return 'Custom Code';
+    }
+
+    /**
+     * Categorize error severity
+     */
+    categorizeErrorSeverity(error) {
+      const msg = error.message?.toLowerCase() || '';
+
+      // Critical errors
+      if (msg.includes('uncaught') || msg.includes('syntax error') || msg.includes('is not defined')) {
+        return 'critical';
+      }
+
+      // High priority
+      if (msg.includes('failed to fetch') || msg.includes('network') || msg.includes('timeout')) {
+        return 'high';
+      }
+
+      // Medium priority
+      if (msg.includes('warning') || msg.includes('deprecated')) {
+        return 'medium';
+      }
+
+      return 'high'; // Default for unknown errors
+    }
+
+    /**
+     * Generate AI-powered fix suggestion
+     */
+    generateErrorFix(error) {
+      const msg = error.message?.toLowerCase() || '';
+
+      if (msg.includes('is not defined')) {
+        const varName = error.message.match(/(\w+) is not defined/)?.[1];
+        return varName ?
+          `Variable "${varName}" is not defined. Check if the script containing it is loaded before use, or if there's a typo in the variable name.` :
+          'Check if all required scripts are loaded and variable names are correct.';
+      }
+
+      if (msg.includes('cannot read property') || msg.includes('cannot read properties')) {
+        return 'Add null/undefined checks before accessing properties. Use optional chaining (?.) to safely access nested properties.';
+      }
+
+      if (msg.includes('failed to fetch')) {
+        return 'Check network connectivity, CORS settings, and ensure the API endpoint is accessible. Add proper error handling for fetch requests.';
+      }
+
+      if (msg.includes('syntax error')) {
+        return 'Fix JavaScript syntax errors. Check for missing brackets, quotes, or semicolons. Use a linter like ESLint.';
+      }
+
+      return 'Review the error stack trace to identify the source. Check browser console for more details.';
+    }
+
+    /**
+     * Get error impact description
+     */
+    getErrorImpact(error) {
+      const msg = error.message?.toLowerCase() || '';
+
+      if (msg.includes('is not defined') || msg.includes('syntax error')) {
+        return 'Breaks functionality - features may not work at all';
+      }
+
+      if (msg.includes('failed to fetch') || msg.includes('network')) {
+        return 'Data loading failures - content may not display';
+      }
+
+      return 'May cause unexpected behavior or reduce functionality';
+    }
+
+    /**
+     * Detect common anti-patterns
+     */
+    detectAntiPatterns() {
+      // Detect excessive DOM queries
+      const domQueries = Object.keys(this.data.dom.queries);
+      const excessiveQueries = domQueries.filter(selector =>
+        this.data.dom.queries[selector] > 100
+      );
+
+      if (excessiveQueries.length > 0) {
+        this.data.issues.patterns.push({
+          name: 'Excessive DOM Queries',
+          description: `${excessiveQueries.length} selector(s) queried more than 100 times. Cache DOM references instead.`,
+          occurrences: excessiveQueries.length,
+          fix: 'Store DOM elements in variables instead of querying repeatedly'
+        });
+      }
+
+      // Detect duplicate scripts
+      if (this.data.scripts.duplicates.length > 0) {
+        this.data.issues.patterns.push({
+          name: 'Duplicate Scripts',
+          description: `${this.data.scripts.duplicates.length} script(s) loaded multiple times`,
+          occurrences: this.data.scripts.duplicates.length,
+          fix: 'Remove duplicate script tags from your HTML'
+        });
+      }
+
+      // Detect FPS drops
+      if (this.data.fps.drops.length > 5) {
+        this.data.issues.patterns.push({
+          name: 'Frequent FPS Drops',
+          description: 'Animations are janky - frame rate drops frequently',
+          occurrences: this.data.fps.drops.length,
+          fix: 'Use CSS transforms instead of absolute positioning. Use requestAnimationFrame for JS animations.'
+        });
+      }
+
+      // Detect rage clicks
+      if (this.data.clicks.rage.length > 0) {
+        this.data.issues.patterns.push({
+          name: 'Rage Clicks Detected',
+          description: 'Users are repeatedly clicking - indicates broken UI or slow response',
+          occurrences: this.data.clicks.rage.length,
+          fix: 'Add loading states, disable buttons during processing, fix broken click handlers'
+        });
+      }
+    }
+
+    /**
+     * Analyze resources by vendor/domain
+     */
+    analyzeResourcesByVendor() {
+      const resources = performance.getEntriesByType('resource');
+      const vendors = {};
+
+      resources.forEach(resource => {
+        try {
+          const url = new URL(resource.name);
+          const domain = url.hostname;
+
+          // Categorize vendor
+          let vendor = domain;
+          if (domain.includes('webflow')) vendor = 'Webflow';
+          else if (domain.includes('google')) vendor = 'Google';
+          else if (domain.includes('facebook') || domain.includes('fb')) vendor = 'Facebook';
+          else if (domain.includes('analytics')) vendor = 'Analytics';
+          else if (domain === window.location.hostname) vendor = 'Your Site';
+
+          if (!vendors[vendor]) {
+            vendors[vendor] = {
+              count: 0,
+              size: 0,
+              blocking: 0
+            };
+          }
+
+          vendors[vendor].count++;
+          vendors[vendor].size += resource.transferSize || 0;
+
+          // Check if blocking
+          if (resource.renderBlockingStatus === 'blocking') {
+            vendors[vendor].blocking++;
+          }
+        } catch (e) {
+          // Invalid URL, skip
+        }
+      });
+
+      this.data.issues.resources.byVendor = vendors;
     }
 
     /**
