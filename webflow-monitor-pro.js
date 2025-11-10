@@ -2637,8 +2637,18 @@
         timeout = setTimeout(() => func.apply(this, args), wait);
       };
     }
+
+    showToast(message, type = 'info') {
+      // Simple console-based toast since we don't have a UI toast system
+      const colors = {
+        success: '#10B981',
+        error: '#EF4444',
+        info: '#6366F1'
+      };
+      console.log(`%c${message}`, `color: ${colors[type]}; font-weight: bold`);
+    }
   }
 
-  // Initialize
-  new WebflowMonitorPro();
+  // Initialize and expose to window
+  window.webflowMonitor = new WebflowMonitorPro();
 })();
