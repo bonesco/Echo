@@ -819,6 +819,13 @@
       this.shadow.querySelectorAll('.wm-tab').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.tab === tabName);
       });
+
+      // Auto-fetch PageSpeed data when tab is opened for the first time
+      if (tabName === 'pagespeed' && !this.data.pageSpeed.loaded && !this.data.pageSpeed.loading) {
+        console.log('%c🚀 Auto-fetching PageSpeed data...', 'color: #6366F1; font-weight: bold');
+        this.fetchPageSpeedData();
+      }
+
       this.renderTabContent(tabName);
     }
 
@@ -2494,23 +2501,44 @@
      * Export report
      */
     exportReport() {
-      const report = {
-        timestamp: new Date().toISOString(),
-        url: window.location.href,
-        environment: this.config.environment,
-        data: this.data,
-        performanceScore: this.calculatePerformanceScore()
-      };
+      try {
+        // Clean data to ensure JSON compatibility
+        const cleanData = JSON.parse(JSON.stringify(this.data, (key, value) => {
+          // Filter out DOM elements, functions, and circular references
+          if (value instanceof Element || value instanceof Node) return '[DOM Element]';
+          if (typeof value === 'function') return '[Function]';
+          if (value === window) return '[Window]';
+          if (value === document) return '[Document]';
+          return value;
+        }));
 
-      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `webflow-monitor-${Date.now()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+        const report = {
+          timestamp: new Date().toISOString(),
+          url: window.location.href,
+          environment: this.config.environment,
+          data: cleanData,
+          performanceScore: this.calculatePerformanceScore(),
+          pageSpeedScores: this.data.pageSpeed.loaded ? {
+            mobile: this.data.pageSpeed.mobile.scores,
+            desktop: this.data.pageSpeed.desktop.scores,
+            recommendations: this.data.pageSpeed.recommendations
+          } : null
+        };
 
-      console.log('%c✅ Report exported successfully', 'color: #10B981; font-weight: bold');
+        const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `webflow-monitor-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        this.showToast('✅ Report exported successfully', 'success');
+        console.log('%c✅ Report exported successfully', 'color: #10B981; font-weight: bold');
+      } catch (error) {
+        console.error('%c❌ Export failed:', 'color: #EF4444', error);
+        this.showToast('❌ Export failed: ' + error.message, 'error');
+      }
     }
 
     /**
