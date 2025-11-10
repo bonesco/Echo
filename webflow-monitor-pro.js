@@ -153,6 +153,10 @@
       this.lastFrameTime = performance.now();
       this.frameCount = 0;
       this.originalConsole = {};
+      this.theme = localStorage.getItem('wm-theme') || 'dark';
+      this.commandPaletteOpen = false;
+      this.commandSearchQuery = '';
+      this.selectedCommandIndex = 0;
 
       this.init();
     }
