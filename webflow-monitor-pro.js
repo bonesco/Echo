@@ -692,6 +692,147 @@
     background: hsl(var(--accent) / 0.5);
   }
 
+  /* Grid & Metric Components */
+  .wm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .wm-metric {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: var(--space-4);
+    transition: all var(--duration-fast) var(--ease);
+  }
+
+  .wm-metric:hover {
+    border-color: hsl(var(--primary) / 0.3);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .wm-metric-label {
+    font-size: 12px;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: var(--space-2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+
+  .wm-metric-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: hsl(var(--foreground));
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wm-metric-value.good {
+    color: hsl(142.1 76.2% 36.3%);
+  }
+
+  .wm-metric-value.warning {
+    color: hsl(38 92% 50%);
+  }
+
+  .wm-metric-value.error {
+    color: hsl(var(--destructive));
+  }
+
+  .wm-metric-value.info {
+    color: hsl(var(--primary));
+  }
+
+  /* Console Entry */
+  .wm-console-entry {
+    padding: var(--space-2) var(--space-3);
+    border-radius: calc(var(--radius) - 2px);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin-bottom: var(--space-2);
+    border-left: 3px solid hsl(var(--border));
+    background: hsl(var(--muted) / 0.3);
+  }
+
+  .wm-console-entry.error {
+    background: hsl(var(--destructive) / 0.1);
+    border-left-color: hsl(var(--destructive));
+    color: hsl(var(--destructive));
+  }
+
+  .wm-console-entry.warning {
+    background: hsl(38 92% 50% / 0.1);
+    border-left-color: hsl(38 92% 50%);
+    color: hsl(38 92% 50%);
+  }
+
+  .wm-console-entry.log {
+    background: hsl(var(--muted) / 0.3);
+    border-left-color: hsl(var(--muted-foreground));
+    color: hsl(var(--foreground));
+  }
+
+  /* Loading State */
+  .wm-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8);
+    color: hsl(var(--muted-foreground));
+    font-size: 14px;
+  }
+
+  /* FPS Overlay */
+  .wm-fps-overlay {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: var(--space-3);
+    min-width: 80px;
+    z-index: 999998;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .wm-fps-value {
+    font-size: 24px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: hsl(var(--foreground));
+  }
+
+  .wm-fps-value.good {
+    color: hsl(142.1 76.2% 36.3%);
+  }
+
+  .wm-fps-value.warning {
+    color: hsl(38 92% 50%);
+  }
+
+  .wm-fps-value.error {
+    color: hsl(var(--destructive));
+  }
+
+  .wm-fps-label {
+    font-size: 10px;
+    color: hsl(var(--muted-foreground));
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: var(--space-1);
+  }
+
+  .wm-fps-graph {
+    height: 40px;
+    margin-top: var(--space-2);
+    position: relative;
+    background: hsl(var(--muted) / 0.3);
+    border-radius: 2px;
+  }
+
   /* Theme Toggle */
   .wm-theme-toggle {
     width: 32px;
@@ -794,6 +935,13 @@
 
   .wm-command-item-icon {
     font-size: 18px;
+  }
+
+  .wm-command-item-label {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: hsl(var(--foreground));
   }
 
   .wm-command-item-content {
@@ -1266,16 +1414,22 @@
     getCommands() {
       return [
         { id: 'overview', label: 'Go to Overview', icon: '📊', action: () => this.switchTab('overview') },
-        { id: 'issues', label: 'Go to Issues', icon: '🎯', action: () => this.switchTab('issues') },
-        { id: 'detective', label: 'Go to Issue Detective', icon: '🔍', action: () => this.switchTab('detective') },
+        { id: 'issues', label: 'Go to AI Issue Detective', icon: '🎯', action: () => this.switchTab('issues') },
         { id: 'performance', label: 'Go to Performance', icon: '⚡', action: () => this.switchTab('performance') },
         { id: 'pagespeed', label: 'Go to PageSpeed', icon: '🚀', action: () => this.switchTab('pagespeed') },
-        { id: 'gsap', label: 'Go to GSAP', icon: '🎬', action: () => this.switchTab('gsap') },
-        { id: 'videos', label: 'Go to Videos', icon: '🎥', action: () => this.switchTab('videos') },
-        { id: 'errors', label: 'Go to Errors', icon: '❌', action: () => this.switchTab('errors') },
+        { id: 'gsap', label: 'Go to GSAP', icon: '✨', action: () => this.switchTab('gsap') },
+        { id: 'videos', label: 'Go to Videos', icon: '🎬', action: () => this.switchTab('videos') },
+        { id: 'errors', label: 'Go to Errors', icon: '🔴', action: () => this.switchTab('errors') },
+        { id: 'dom', label: 'Go to DOM', icon: '📄', action: () => this.switchTab('dom') },
+        { id: 'clicks', label: 'Go to Clicks', icon: '👆', action: () => this.switchTab('clicks') },
+        { id: 'scroll', label: 'Go to Scroll', icon: '📜', action: () => this.switchTab('scroll') },
+        { id: 'memory', label: 'Go to Memory', icon: '💾', action: () => this.switchTab('memory') },
+        { id: 'scripts', label: 'Go to Scripts', icon: '📦', action: () => this.switchTab('scripts') },
+        { id: 'network', label: 'Go to Network', icon: '🌐', action: () => this.switchTab('network') },
+        { id: 'console', label: 'Go to Console', icon: '💻', action: () => this.switchTab('console') },
         { id: 'export', label: 'Export Report', icon: '💾', action: () => this.exportReport() },
         { id: 'theme', label: 'Toggle Theme', icon: '🌓', action: () => this.toggleTheme() },
-        { id: 'refresh', label: 'Refresh Data', icon: '🔄', action: () => this.collectAllData() },
+        { id: 'refresh', label: 'Refresh Data', icon: '🔄', action: () => this.updateUI() },
         { id: 'pagespeed-fetch', label: 'Fetch PageSpeed Data', icon: '🚀', action: () => this.fetchPageSpeedData() },
       ];
     }
