@@ -1492,8 +1492,12 @@
           <div class="wm-card">
             <div class="wm-card-title">⏳ Loading PageSpeed Insights...</div>
             <div style="padding: 40px; text-align: center;">
-              <div style="margin-bottom: 16px;">Fetching performance data from Google...</div>
-              <div style="color: #94A3B8;">This may take 10-30 seconds</div>
+              <div style="margin-bottom: 16px; font-size: 15px;">🔄 Running Google PageSpeed analysis...</div>
+              <div style="color: #94A3B8; margin-bottom: 8px;">This typically takes 30-60 seconds</div>
+              <div style="color: #64748B; font-size: 13px;">Google is analyzing your site for mobile and desktop performance</div>
+              <div style="margin-top: 24px; padding: 16px; background: rgba(99, 102, 241, 0.1); border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                <div style="color: #A5B4FC; font-size: 13px;">💡 Tip: Keep this tab open while the analysis runs</div>
+              </div>
             </div>
           </div>
         `;
@@ -1828,21 +1832,46 @@
     async fetchPageSpeedData() {
       this.data.pageSpeed.loading = true;
       this.data.pageSpeed.error = null;
+      this.updateUI(); // Show loading state immediately
 
       const url = encodeURIComponent(window.location.href);
       const apiKey = 'AIzaSyBNRu1o8lSmSYBH8vPsLXGhMSL0TQXZQ-8'; // Public PageSpeed API key
 
       try {
         console.log('%c⏳ Fetching PageSpeed Insights...', 'color: #6366F1; font-weight: bold;');
+        console.log('%c⏰ This may take 30-60 seconds...', 'color: #94A3B8; font-style: italic;');
 
-        // Fetch both mobile and desktop data
+        // Create abort controller with 90 second timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 90000);
+
+        // Fetch both mobile and desktop data with timeout
         const [mobileResponse, desktopResponse] = await Promise.all([
-          fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${url}&strategy=mobile&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&key=${apiKey}`),
-          fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${url}&strategy=desktop&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&key=${apiKey}`)
+          fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${url}&strategy=mobile&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&key=${apiKey}`, {
+            signal: controller.signal
+          }),
+          fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${url}&strategy=desktop&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&key=${apiKey}`, {
+            signal: controller.signal
+          })
         ]);
+
+        clearTimeout(timeoutId);
+
+        // Check if responses are OK
+        if (!mobileResponse.ok || !desktopResponse.ok) {
+          throw new Error(`API Error: ${mobileResponse.status} - ${mobileResponse.statusText}`);
+        }
 
         const mobileData = await mobileResponse.json();
         const desktopData = await desktopResponse.json();
+
+        // Check for API errors in response
+        if (mobileData.error) {
+          throw new Error(`PageSpeed API Error: ${mobileData.error.message || 'Unknown error'}`);
+        }
+        if (desktopData.error) {
+          throw new Error(`PageSpeed API Error: ${desktopData.error.message || 'Unknown error'}`);
+        }
 
         // Parse mobile data
         if (mobileData.lighthouseResult) {
@@ -1929,7 +1958,16 @@
 
       } catch (error) {
         console.error('%c❌ PageSpeed fetch failed:', 'color: #EF4444', error);
-        this.data.pageSpeed.error = error.message;
+
+        // Better error messages
+        let errorMessage = error.message;
+        if (error.name === 'AbortError') {
+          errorMessage = 'Request timeout - PageSpeed API took too long to respond. Try again later.';
+        } else if (errorMessage.includes('Failed to fetch')) {
+          errorMessage = 'Network error - Unable to reach PageSpeed API. Check your internet connection.';
+        }
+
+        this.data.pageSpeed.error = errorMessage;
         this.data.pageSpeed.loading = false;
         this.updateUI();
       }
