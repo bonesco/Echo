@@ -185,6 +185,7 @@
 
     console.log('✨ Monitor Pro loaded with Premium UI!');
     console.log('💡 Press Cmd/Ctrl+Shift+D to open');
+    console.log('🚀 Open the PageSpeed tab and click "Run PageSpeed Test" for insights');
 
     // Auto-export after 3 seconds
     setTimeout(() => {

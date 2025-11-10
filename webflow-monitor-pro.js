@@ -105,6 +105,24 @@
           failed: [],
           duplicates: [],
           timing: {}
+        },
+        pageSpeed: {
+          loading: false,
+          loaded: false,
+          error: null,
+          mobile: {
+            score: null,
+            scores: {},
+            opportunities: [],
+            diagnostics: []
+          },
+          desktop: {
+            score: null,
+            scores: {},
+            opportunities: [],
+            diagnostics: []
+          },
+          recommendations: []
         }
       };
 
@@ -673,6 +691,7 @@
           <button class="wm-tab" data-tab="memory">Memory</button>
           <button class="wm-tab" data-tab="scripts">Scripts</button>
           <button class="wm-tab" data-tab="network">Network</button>
+          <button class="wm-tab" data-tab="pagespeed">PageSpeed 🚀</button>
           <button class="wm-tab" data-tab="console">Console</button>
         </div>
         <div class="wm-content">
@@ -872,6 +891,9 @@
           break;
         case 'network':
           content.innerHTML = this.renderNetwork();
+          break;
+        case 'pagespeed':
+          content.innerHTML = this.renderPageSpeed();
           break;
         case 'console':
           content.innerHTML = this.renderConsole();
@@ -1454,6 +1476,217 @@
       `;
     }
 
+    renderPageSpeed() {
+      const ps = this.data.pageSpeed;
+
+      // Show loading state
+      if (ps.loading) {
+        return `
+          <div class="wm-card">
+            <div class="wm-card-title">⏳ Loading PageSpeed Insights...</div>
+            <div style="padding: 40px; text-align: center;">
+              <div style="margin-bottom: 16px;">Fetching performance data from Google...</div>
+              <div style="color: #94A3B8;">This may take 10-30 seconds</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Show error state
+      if (ps.error) {
+        return `
+          <div class="wm-card">
+            <div class="wm-card-title">❌ PageSpeed Error</div>
+            <div style="padding: 20px;">
+              <div style="color: #EF4444; margin-bottom: 12px;">Failed to fetch PageSpeed data</div>
+              <div style="color: #94A3B8; font-size: 13px;">${this.escapeHtml(ps.error)}</div>
+              <button class="wm-btn wm-btn-primary" style="margin-top: 16px;" onclick="window.webflowMonitor.fetchPageSpeedData()">
+                Retry
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      // Show empty state with fetch button
+      if (!ps.loaded) {
+        return `
+          <div class="wm-card">
+            <div class="wm-card-title">🚀 Google PageSpeed Insights</div>
+            <div style="padding: 40px; text-align: center;">
+              <div style="margin-bottom: 16px; color: #CBD5E1;">
+                Get comprehensive performance insights from Google PageSpeed
+              </div>
+              <button class="wm-btn wm-btn-primary" onclick="window.webflowMonitor.fetchPageSpeedData()">
+                Run PageSpeed Test
+              </button>
+              <div style="margin-top: 12px; color: #64748B; font-size: 12px;">
+                This will analyze mobile and desktop performance
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Helper function to get score color
+      const getScoreColor = (score) => {
+        if (score >= 90) return '#10B981'; // Green
+        if (score >= 50) return '#F59E0B'; // Orange
+        return '#EF4444'; // Red
+      };
+
+      // Helper function to get priority badge color
+      const getPriorityColor = (priority) => {
+        if (priority === 'high') return '#EF4444';
+        if (priority === 'medium') return '#F59E0B';
+        return '#6B7280';
+      };
+
+      return `
+        <div class="wm-card">
+          <div class="wm-card-title">🚀 Google PageSpeed Insights</div>
+
+          <!-- Score Overview -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+            <!-- Mobile Scores -->
+            <div style="background: rgba(30, 41, 59, 0.5); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+              <div style="font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                📱 Mobile
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div style="text-align: center;">
+                  <div style="font-size: 32px; font-weight: 700; color: ${getScoreColor(ps.mobile.scores.performance)};">
+                    ${ps.mobile.scores.performance}
+                  </div>
+                  <div style="font-size: 11px; color: #94A3B8; margin-top: 4px;">Performance</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="font-size: 32px; font-weight: 700; color: ${getScoreColor(ps.mobile.scores.accessibility)};">
+                    ${ps.mobile.scores.accessibility}
+                  </div>
+                  <div style="font-size: 11px; color: #94A3B8; margin-top: 4px;">Accessibility</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="font-size: 32px; font-weight: 700; color: ${getScoreColor(ps.mobile.scores.bestPractices)};">
+                    ${ps.mobile.scores.bestPractices}
+                  </div>
+                  <div style="font-size: 11px; color: #94A3B8; margin-top: 4px;">Best Practices</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="font-size: 32px; font-weight: 700; color: ${getScoreColor(ps.mobile.scores.seo)};">
+                    ${ps.mobile.scores.seo}
+                  </div>
+                  <div style="font-size: 11px; color: #94A3B8; margin-top: 4px;">SEO</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Desktop Scores -->
+            <div style="background: rgba(30, 41, 59, 0.5); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+              <div style="font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                💻 Desktop
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div style="text-align: center;">
+                  <div style="font-size: 32px; font-weight: 700; color: ${getScoreColor(ps.desktop.scores.performance)};">
+                    ${ps.desktop.scores.performance}
+                  </div>
+                  <div style="font-size: 11px; color: #94A3B8; margin-top: 4px;">Performance</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="font-size: 32px; font-weight: 700; color: ${getScoreColor(ps.desktop.scores.accessibility)};">
+                    ${ps.desktop.scores.accessibility}
+                  </div>
+                  <div style="font-size: 11px; color: #94A3B8; margin-top: 4px;">Accessibility</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="font-size: 32px; font-weight: 700; color: ${getScoreColor(ps.desktop.scores.bestPractices)};">
+                    ${ps.desktop.scores.bestPractices}
+                  </div>
+                  <div style="font-size: 11px; color: #94A3B8; margin-top: 4px;">Best Practices</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="font-size: 32px; font-weight: 700; color: ${getScoreColor(ps.desktop.scores.seo)};">
+                    ${ps.desktop.scores.seo}
+                  </div>
+                  <div style="font-size: 11px; color: #94A3B8; margin-top: 4px;">SEO</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recommendations -->
+          ${ps.recommendations.length > 0 ? `
+            <div style="margin-bottom: 24px;">
+              <div style="font-weight: 600; margin-bottom: 12px; font-size: 15px;">💡 Recommendations</div>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                ${ps.recommendations.map(rec => `
+                  <div style="background: rgba(30, 41, 59, 0.5); padding: 16px; border-radius: 8px; border-left: 3px solid ${getPriorityColor(rec.priority)};">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                      <span style="background: ${getPriorityColor(rec.priority)}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600;">
+                        ${rec.priority}
+                      </span>
+                      <span style="color: #94A3B8; font-size: 12px;">${rec.category}</span>
+                    </div>
+                    <div style="font-weight: 600; margin-bottom: 6px;">${this.escapeHtml(rec.issue)}</div>
+                    <div style="color: #CBD5E1; font-size: 13px; margin-bottom: 6px;">${this.escapeHtml(rec.recommendation)}</div>
+                    <div style="color: #64748B; font-size: 12px; font-style: italic;">${this.escapeHtml(rec.impact)}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Top Opportunities (Mobile) -->
+          ${ps.mobile.opportunities.length > 0 ? `
+            <div style="margin-bottom: 24px;">
+              <div style="font-weight: 600; margin-bottom: 12px; font-size: 15px;">⚡ Top Opportunities (Mobile)</div>
+              <table class="wm-table">
+                <thead>
+                  <tr>
+                    <th>Opportunity</th>
+                    <th>Potential Savings</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${ps.mobile.opportunities.slice(0, 5).map(opp => `
+                    <tr>
+                      <td>
+                        <div style="font-weight: 500;">${this.escapeHtml(opp.title)}</div>
+                        <div style="color: #94A3B8; font-size: 12px; margin-top: 4px;">${this.escapeHtml(opp.description)}</div>
+                      </td>
+                      <td style="color: ${opp.savings > 2000 ? '#EF4444' : opp.savings > 1000 ? '#F59E0B' : '#10B981'}; font-weight: 600;">
+                        ${(opp.savings / 1000).toFixed(1)}s
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+
+          <!-- Diagnostics -->
+          ${ps.mobile.diagnostics.length > 0 ? `
+            <div style="margin-bottom: 24px;">
+              <div style="font-weight: 600; margin-bottom: 12px; font-size: 15px;">🔍 Diagnostics</div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                ${ps.mobile.diagnostics.slice(0, 5).map(diag => `
+                  <div style="background: rgba(30, 41, 59, 0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div style="font-weight: 500; margin-bottom: 4px;">${this.escapeHtml(diag.title)}</div>
+                    <div style="color: #94A3B8; font-size: 12px;">${this.escapeHtml(diag.description)}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <button class="wm-btn wm-btn-primary" onclick="window.webflowMonitor.fetchPageSpeedData()" style="width: 100%;">
+            🔄 Refresh PageSpeed Data
+          </button>
+        </div>
+      `;
+    }
+
     renderConsole() {
       return `
         <div class="wm-card">
@@ -1580,6 +1813,196 @@
           this.observers.push(clsObserver);
         } catch (e) {}
       }
+    }
+
+    /**
+     * Fetch Google PageSpeed Insights data
+     */
+    async fetchPageSpeedData() {
+      this.data.pageSpeed.loading = true;
+      this.data.pageSpeed.error = null;
+
+      const url = encodeURIComponent(window.location.href);
+      const apiKey = 'AIzaSyBNRu1o8lSmSYBH8vPsLXGhMSL0TQXZQ-8'; // Public PageSpeed API key
+
+      try {
+        console.log('%c⏳ Fetching PageSpeed Insights...', 'color: #6366F1; font-weight: bold;');
+
+        // Fetch both mobile and desktop data
+        const [mobileResponse, desktopResponse] = await Promise.all([
+          fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${url}&strategy=mobile&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&key=${apiKey}`),
+          fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${url}&strategy=desktop&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&key=${apiKey}`)
+        ]);
+
+        const mobileData = await mobileResponse.json();
+        const desktopData = await desktopResponse.json();
+
+        // Parse mobile data
+        if (mobileData.lighthouseResult) {
+          const lr = mobileData.lighthouseResult;
+          this.data.pageSpeed.mobile.score = Math.round((lr.categories.performance?.score || 0) * 100);
+          this.data.pageSpeed.mobile.scores = {
+            performance: Math.round((lr.categories.performance?.score || 0) * 100),
+            accessibility: Math.round((lr.categories.accessibility?.score || 0) * 100),
+            bestPractices: Math.round((lr.categories['best-practices']?.score || 0) * 100),
+            seo: Math.round((lr.categories.seo?.score || 0) * 100)
+          };
+
+          // Extract opportunities
+          this.data.pageSpeed.mobile.opportunities = Object.entries(lr.audits)
+            .filter(([key, audit]) => audit.score !== null && audit.score < 1 && audit.details?.overallSavingsMs)
+            .map(([key, audit]) => ({
+              id: key,
+              title: audit.title,
+              description: audit.description,
+              score: audit.score,
+              savings: audit.details.overallSavingsMs,
+              displayValue: audit.displayValue
+            }))
+            .sort((a, b) => b.savings - a.savings)
+            .slice(0, 10);
+
+          // Extract diagnostics
+          this.data.pageSpeed.mobile.diagnostics = Object.entries(lr.audits)
+            .filter(([key, audit]) => audit.score !== null && audit.score < 1 && !audit.details?.overallSavingsMs && audit.scoreDisplayMode === 'binary')
+            .map(([key, audit]) => ({
+              id: key,
+              title: audit.title,
+              description: audit.description,
+              score: audit.score
+            }))
+            .slice(0, 10);
+        }
+
+        // Parse desktop data
+        if (desktopData.lighthouseResult) {
+          const lr = desktopData.lighthouseResult;
+          this.data.pageSpeed.desktop.score = Math.round((lr.categories.performance?.score || 0) * 100);
+          this.data.pageSpeed.desktop.scores = {
+            performance: Math.round((lr.categories.performance?.score || 0) * 100),
+            accessibility: Math.round((lr.categories.accessibility?.score || 0) * 100),
+            bestPractices: Math.round((lr.categories['best-practices']?.score || 0) * 100),
+            seo: Math.round((lr.categories.seo?.score || 0) * 100)
+          };
+
+          // Extract opportunities
+          this.data.pageSpeed.desktop.opportunities = Object.entries(lr.audits)
+            .filter(([key, audit]) => audit.score !== null && audit.score < 1 && audit.details?.overallSavingsMs)
+            .map(([key, audit]) => ({
+              id: key,
+              title: audit.title,
+              description: audit.description,
+              score: audit.score,
+              savings: audit.details.overallSavingsMs,
+              displayValue: audit.displayValue
+            }))
+            .sort((a, b) => b.savings - a.savings)
+            .slice(0, 10);
+
+          // Extract diagnostics
+          this.data.pageSpeed.desktop.diagnostics = Object.entries(lr.audits)
+            .filter(([key, audit]) => audit.score !== null && audit.score < 1 && !audit.details?.overallSavingsMs && audit.scoreDisplayMode === 'binary')
+            .map(([key, audit]) => ({
+              id: key,
+              title: audit.title,
+              description: audit.description,
+              score: audit.score
+            }))
+            .slice(0, 10);
+        }
+
+        // Generate recommendations
+        this.generatePageSpeedRecommendations();
+
+        this.data.pageSpeed.loaded = true;
+        this.data.pageSpeed.loading = false;
+
+        console.log('%c✅ PageSpeed data loaded!', 'color: #10B981; font-weight: bold;');
+        this.updateUI();
+
+      } catch (error) {
+        console.error('%c❌ PageSpeed fetch failed:', 'color: #EF4444', error);
+        this.data.pageSpeed.error = error.message;
+        this.data.pageSpeed.loading = false;
+        this.updateUI();
+      }
+    }
+
+    /**
+     * Generate PageSpeed recommendations
+     */
+    generatePageSpeedRecommendations() {
+      const recommendations = [];
+      const mobile = this.data.pageSpeed.mobile;
+      const desktop = this.data.pageSpeed.desktop;
+
+      // Performance recommendations
+      if (mobile.scores.performance < 50 || desktop.scores.performance < 50) {
+        recommendations.push({
+          priority: 'high',
+          category: 'Performance',
+          issue: 'Poor Performance Score',
+          recommendation: 'Your site has a low performance score. Focus on the top opportunities listed below to improve load times.',
+          impact: 'Critical - affects user experience and SEO rankings'
+        });
+      } else if (mobile.scores.performance < 90 || desktop.scores.performance < 90) {
+        recommendations.push({
+          priority: 'medium',
+          category: 'Performance',
+          issue: 'Performance Can Be Improved',
+          recommendation: 'Your site is performing adequately but has room for optimization. Review the opportunities below.',
+          impact: 'Moderate - minor improvements can enhance user experience'
+        });
+      }
+
+      // Accessibility recommendations
+      if (mobile.scores.accessibility < 90 || desktop.scores.accessibility < 90) {
+        recommendations.push({
+          priority: 'high',
+          category: 'Accessibility',
+          issue: 'Accessibility Issues Detected',
+          recommendation: 'Improve accessibility by adding alt text to images, ensuring proper color contrast, and using semantic HTML.',
+          impact: 'Critical - affects users with disabilities and legal compliance'
+        });
+      }
+
+      // SEO recommendations
+      if (mobile.scores.seo < 90 || desktop.scores.seo < 90) {
+        recommendations.push({
+          priority: 'medium',
+          category: 'SEO',
+          issue: 'SEO Improvements Needed',
+          recommendation: 'Optimize meta tags, ensure mobile-friendliness, and fix any crawlability issues.',
+          impact: 'Important - affects search engine visibility'
+        });
+      }
+
+      // Best practices recommendations
+      if (mobile.scores.bestPractices < 90 || desktop.scores.bestPractices < 90) {
+        recommendations.push({
+          priority: 'low',
+          category: 'Best Practices',
+          issue: 'Best Practice Violations',
+          recommendation: 'Follow modern web development best practices for security, compatibility, and maintainability.',
+          impact: 'Low - improves code quality and security'
+        });
+      }
+
+      // Specific opportunity-based recommendations
+      const allOpportunities = [...mobile.opportunities, ...desktop.opportunities];
+      const topOpportunity = allOpportunities.sort((a, b) => b.savings - a.savings)[0];
+
+      if (topOpportunity && topOpportunity.savings > 1000) {
+        recommendations.push({
+          priority: 'high',
+          category: 'Performance',
+          issue: topOpportunity.title,
+          recommendation: topOpportunity.description,
+          impact: `Could save ${Math.round(topOpportunity.savings / 1000)}s`
+        });
+      }
+
+      this.data.pageSpeed.recommendations = recommendations;
     }
 
     /**
