@@ -41,6 +41,7 @@
       this.isExpanded = false;
       this.activeTab = 'overview';
       this.consoleErrors = [];
+      this.searchTerm = '';
 
       this.init();
     }
@@ -819,6 +820,15 @@
           e.preventDefault();
           this.toggleMinimize();
         }
+        if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'E') {
+          e.preventDefault();
+          this.exportReport();
+        }
+        if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'R') {
+          e.preventDefault();
+          this.runAllAudits();
+          this.showToast('Refreshed', 'All audits have been refreshed');
+        }
       });
 
       // Dragging
@@ -1312,6 +1322,48 @@
           </table>
         </div>
 
+        ${wf.libraries && wf.libraries.length > 0 ? `
+        <div class="wdc-card wdc-mt-4">
+          <div class="wdc-card-header">
+            <span class="wdc-card-title">JavaScript Libraries</span>
+          </div>
+          <table class="wdc-table">
+            <thead>
+              <tr>
+                <th>Library</th>
+                <th>Version</th>
+                <th>Global</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${wf.libraries.map(lib => `
+                <tr>
+                  <td>${lib.name}</td>
+                  <td><code>${lib.version}</code></td>
+                  <td><code>${lib.global}</code></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        ` : ''}
+
+        ${wf.integrations && wf.integrations.length > 0 ? `
+        <div class="wdc-card wdc-mt-4">
+          <div class="wdc-card-header">
+            <span class="wdc-card-title">Third-Party Integrations</span>
+          </div>
+          <div class="wdc-overview-grid">
+            ${wf.integrations.map(integration => `
+              <div>
+                <div class="wdc-card-value wdc-text-success">✓</div>
+                <div class="wdc-card-label">${integration.name}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+
         <div class="wdc-card wdc-mt-4">
           <div class="wdc-card-header">
             <span class="wdc-card-title">Interactions</span>
@@ -1366,6 +1418,89 @@
           `}
         </div>
 
+        ${wf.cmsFields && wf.cmsFields.length > 0 ? `
+        <div class="wdc-card wdc-mt-4">
+          <div class="wdc-card-header">
+            <span class="wdc-card-title">CMS Fields (${wf.cmsFields.length})</span>
+          </div>
+          <table class="wdc-table">
+            <thead>
+              <tr>
+                <th>Binding</th>
+                <th>Element</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${wf.cmsFields.slice(0, 10).map(field => `
+                <tr>
+                  <td><code>${field.binding}</code></td>
+                  <td><code>${field.element}</code></td>
+                  <td>${field.type}</td>
+                </tr>
+              `).join('')}
+              ${wf.cmsFields.length > 10 ? `
+                <tr>
+                  <td colspan="3" style="text-align: center; color: #94A3B8; font-style: italic;">
+                    ... and ${wf.cmsFields.length - 10} more fields
+                  </td>
+                </tr>
+              ` : ''}
+            </tbody>
+          </table>
+        </div>
+        ` : ''}
+
+        ${wf.forms && wf.forms.length > 0 ? `
+        <div class="wdc-card wdc-mt-4">
+          <div class="wdc-card-header">
+            <span class="wdc-card-title">Forms</span>
+          </div>
+          <table class="wdc-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Fields</th>
+                <th>Required</th>
+                <th>Redirect</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${wf.forms.map(form => `
+                <tr>
+                  <td>${form.name}</td>
+                  <td>${form.totalFields}</td>
+                  <td>${form.requiredFields}</td>
+                  <td>${form.hasRedirect ? `<code>${form.redirect || 'Yes'}</code>` : '—'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        ` : ''}
+
+        ${wf.ecommerce && wf.ecommerce.enabled ? `
+        <div class="wdc-card wdc-mt-4">
+          <div class="wdc-card-header">
+            <span class="wdc-card-title">E-commerce</span>
+          </div>
+          <div class="wdc-overview-grid">
+            <div>
+              <div class="wdc-card-value wdc-text-success">✓</div>
+              <div class="wdc-card-label">E-commerce Enabled</div>
+            </div>
+            <div>
+              <div class="wdc-card-value">${wf.ecommerce.products}</div>
+              <div class="wdc-card-label">Products</div>
+            </div>
+            <div>
+              <div class="wdc-card-value ${wf.ecommerce.cartEnabled ? 'wdc-text-success' : 'wdc-text-error'}">${wf.ecommerce.cartEnabled ? '✓' : '✗'}</div>
+              <div class="wdc-card-label">Cart</div>
+            </div>
+          </div>
+        </div>
+        ` : ''}
+
         <div class="wdc-card wdc-mt-4">
           <div class="wdc-card-header">
             <span class="wdc-card-title">Custom Code Blocks</span>
@@ -1385,6 +1520,24 @@
             </div>
           </div>
         </div>
+
+        ${wf.customCodeAnalysis && wf.customCodeAnalysis.length > 0 ? `
+        <div class="wdc-card wdc-mt-4">
+          <div class="wdc-card-header">
+            <span class="wdc-card-title">Custom Code Analysis</span>
+          </div>
+          <div class="wdc-issue-list">
+            ${wf.customCodeAnalysis.map(issue => `
+              <div class="wdc-issue ${issue.type}">
+                <div class="wdc-issue-header">
+                  <div class="wdc-issue-title">${issue.message}</div>
+                  <div class="wdc-issue-severity ${issue.type}">${issue.type}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
       `;
     }
 
@@ -1401,6 +1554,33 @@
             this.highlightElement(selector);
           }
         });
+      });
+
+      // Setup search handlers
+      const searchInput = this.shadow.querySelector('.wdc-search');
+      if (searchInput) {
+        searchInput.addEventListener('input', this.debounce((e) => {
+          this.searchTerm = e.target.value.toLowerCase();
+          this.filterContent();
+        }, 300));
+      }
+    }
+
+    /**
+     * Filter content based on search term
+     */
+    filterContent() {
+      const issues = this.shadow.querySelectorAll('.wdc-issue');
+      const rows = this.shadow.querySelectorAll('.wdc-table tbody tr');
+
+      issues.forEach(issue => {
+        const text = issue.textContent.toLowerCase();
+        issue.style.display = text.includes(this.searchTerm) ? '' : 'none';
+      });
+
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(this.searchTerm) ? '' : 'none';
       });
     }
 
@@ -1489,12 +1669,30 @@
       // Detect CMS collections
       webflow.cmsCollections = this.detectCMSCollections();
 
+      // Detect CMS fields
+      webflow.cmsFields = this.detectCMSFields();
+
+      // Detect Forms
+      webflow.forms = this.detectForms();
+
+      // Detect E-commerce
+      webflow.ecommerce = this.detectEcommerce();
+
+      // Detect third-party integrations
+      webflow.integrations = this.detectThirdPartyIntegrations();
+
+      // Detect libraries
+      webflow.libraries = this.detectLibraries();
+
       // Count custom code blocks
       webflow.customCodeBlocks = {
         head: document.querySelectorAll('head script:not([src])').length,
         body: document.querySelectorAll('body > script:not([src])').length,
         embed: document.querySelectorAll('[data-w-type="Embed"]').length
       };
+
+      // Analyze custom code
+      webflow.customCodeAnalysis = this.analyzeCustomCode();
 
       this.data.webflow = webflow;
     }
@@ -1545,6 +1743,239 @@
       });
 
       return collections;
+    }
+
+    /**
+     * Detect CMS fields (data-w-bind)
+     */
+    detectCMSFields() {
+      const fields = [];
+      const seen = new Set();
+
+      document.querySelectorAll('[data-w-bind]').forEach(el => {
+        const binding = el.getAttribute('data-w-bind');
+        if (!seen.has(binding)) {
+          seen.add(binding);
+          fields.push({
+            binding: binding,
+            element: this.getSelector(el),
+            type: el.tagName.toLowerCase()
+          });
+        }
+      });
+
+      return fields;
+    }
+
+    /**
+     * Detect Webflow Forms
+     */
+    detectForms() {
+      const forms = [];
+
+      document.querySelectorAll('form[data-name]').forEach(form => {
+        const formData = {
+          name: form.getAttribute('data-name'),
+          id: form.id,
+          hasRedirect: form.hasAttribute('data-redirect'),
+          redirect: form.getAttribute('data-redirect') || null,
+          method: form.method || 'POST',
+          requiredFields: form.querySelectorAll('[required]').length,
+          totalFields: form.querySelectorAll('input, textarea, select').length
+        };
+        forms.push(formData);
+      });
+
+      return forms;
+    }
+
+    /**
+     * Detect Webflow E-commerce
+     */
+    detectEcommerce() {
+      const ecommerce = {
+        enabled: false,
+        products: 0,
+        cartEnabled: false
+      };
+
+      // Check for e-commerce elements
+      const ecommerceElements = document.querySelectorAll('[data-wf-cart-type], [data-wf-product-type]');
+      if (ecommerceElements.length > 0) {
+        ecommerce.enabled = true;
+      }
+
+      // Count products
+      ecommerce.products = document.querySelectorAll('[data-wf-product-type="product"]').length;
+
+      // Check for cart
+      ecommerce.cartEnabled = document.querySelector('[data-wf-cart-type="cart"]') !== null;
+
+      return ecommerce;
+    }
+
+    /**
+     * Detect third-party integrations
+     */
+    detectThirdPartyIntegrations() {
+      const integrations = [];
+
+      // Google Analytics
+      if (window.ga || window.gtag || window.dataLayer) {
+        integrations.push({ name: 'Google Analytics', detected: true });
+      }
+
+      // Google Tag Manager
+      if (window.google_tag_manager) {
+        integrations.push({ name: 'Google Tag Manager', detected: true });
+      }
+
+      // Facebook Pixel
+      if (window.fbq) {
+        integrations.push({ name: 'Facebook Pixel', detected: true });
+      }
+
+      // Hotjar
+      if (window.hj) {
+        integrations.push({ name: 'Hotjar', detected: true });
+      }
+
+      // Intercom
+      if (window.Intercom) {
+        integrations.push({ name: 'Intercom', detected: true });
+      }
+
+      // Segment
+      if (window.analytics) {
+        integrations.push({ name: 'Segment', detected: true });
+      }
+
+      // Google Fonts
+      if (document.querySelector('link[href*="fonts.googleapis.com"]')) {
+        integrations.push({ name: 'Google Fonts', detected: true });
+      }
+
+      // Adobe Fonts
+      if (document.querySelector('link[href*="use.typekit.net"]') || document.querySelector('link[href*="typekit.com"]')) {
+        integrations.push({ name: 'Adobe Fonts', detected: true });
+      }
+
+      return integrations;
+    }
+
+    /**
+     * Detect JavaScript libraries
+     */
+    detectLibraries() {
+      const libraries = [];
+
+      // jQuery
+      if (window.jQuery) {
+        libraries.push({
+          name: 'jQuery',
+          version: window.jQuery.fn.jquery || 'Unknown',
+          global: 'jQuery'
+        });
+      }
+
+      // GSAP
+      if (window.gsap) {
+        libraries.push({
+          name: 'GSAP',
+          version: window.gsap.version || 'Unknown',
+          global: 'gsap'
+        });
+      }
+
+      // Swiper
+      if (window.Swiper) {
+        libraries.push({
+          name: 'Swiper',
+          version: window.Swiper.version || 'Unknown',
+          global: 'Swiper'
+        });
+      }
+
+      // Slick
+      if (window.jQuery && window.jQuery.fn.slick) {
+        libraries.push({
+          name: 'Slick Slider',
+          version: 'Unknown',
+          global: '$.fn.slick'
+        });
+      }
+
+      // Vimeo Player
+      if (window.Vimeo) {
+        libraries.push({
+          name: 'Vimeo Player',
+          version: 'Unknown',
+          global: 'Vimeo'
+        });
+      }
+
+      // YouTube API
+      if (window.YT) {
+        libraries.push({
+          name: 'YouTube API',
+          version: 'Unknown',
+          global: 'YT'
+        });
+      }
+
+      return libraries;
+    }
+
+    /**
+     * Analyze custom code for issues
+     */
+    analyzeCustomCode() {
+      const issues = [];
+
+      // Check for document.write
+      const scripts = Array.from(document.querySelectorAll('script:not([src])'));
+      scripts.forEach(script => {
+        if (script.textContent.includes('document.write')) {
+          issues.push({
+            type: 'warning',
+            message: 'document.write() detected - can block page rendering'
+          });
+        }
+
+        // Check for inline event handlers in script content
+        if (script.textContent.match(/onclick\s*=|onload\s*=|onerror\s*=/i)) {
+          issues.push({
+            type: 'info',
+            message: 'Inline event handlers detected in script'
+          });
+        }
+      });
+
+      // Check for inline event handlers in HTML
+      const elementsWithInlineEvents = document.querySelectorAll('[onclick], [onload], [onerror], [onmouseover]');
+      if (elementsWithInlineEvents.length > 0) {
+        issues.push({
+          type: 'warning',
+          message: `${elementsWithInlineEvents.length} elements with inline event handlers (security risk)`
+        });
+      }
+
+      // Check for global variable pollution
+      const globalVars = Object.keys(window).filter(key => {
+        return !key.startsWith('webkit') &&
+               !key.startsWith('chrome') &&
+               typeof window[key] !== 'function' &&
+               !['Webflow', 'jQuery', '$', 'gsap', 'dataLayer'].includes(key);
+      });
+
+      if (globalVars.length > 50) {
+        issues.push({
+          type: 'info',
+          message: `${globalVars.length} global variables detected - consider using modules`
+        });
+      }
+
+      return issues;
     }
 
     /**
@@ -1648,6 +2079,19 @@
         }
       });
 
+      // Alt text too long
+      document.querySelectorAll('img[alt]').forEach(img => {
+        const alt = img.getAttribute('alt');
+        if (alt && alt.length > 125) {
+          issues.push({
+            title: 'Alt text too long',
+            description: `Alt text is ${alt.length} characters. Keep it under 125 characters.`,
+            severity: 'info',
+            selector: this.getSelector(img)
+          });
+        }
+      });
+
       // Missing form labels
       document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"])').forEach(input => {
         const id = input.id;
@@ -1679,8 +2123,61 @@
         }
       });
 
-      // Check for low contrast (simplified check)
-      // This would need more sophisticated color analysis in production
+      // Check for heading hierarchy
+      const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+      const levels = headings.map(h => parseInt(h.tagName.substring(1)));
+
+      for (let i = 1; i < levels.length; i++) {
+        if (levels[i] - levels[i-1] > 1) {
+          issues.push({
+            title: 'Skipped heading level',
+            description: `Heading levels should not be skipped (found ${levels[i-1]} followed by ${levels[i]})`,
+            severity: 'warning',
+            selector: this.getSelector(headings[i])
+          });
+        }
+      }
+
+      // Missing landmarks
+      const hasMain = document.querySelector('main') !== null;
+      const hasNav = document.querySelector('nav') !== null;
+
+      if (!hasMain) {
+        issues.push({
+          title: 'Missing main landmark',
+          description: 'Page should have a <main> element for the main content',
+          severity: 'warning'
+        });
+      }
+
+      if (!hasNav) {
+        issues.push({
+          title: 'Missing nav landmark',
+          description: 'Consider adding a <nav> element for navigation',
+          severity: 'info'
+        });
+      }
+
+      // Links without href or empty text
+      document.querySelectorAll('a').forEach(link => {
+        if (!link.hasAttribute('href') || link.getAttribute('href') === '#') {
+          issues.push({
+            title: 'Link without proper href',
+            description: 'Links should have meaningful href attributes',
+            severity: 'warning',
+            selector: this.getSelector(link)
+          });
+        }
+
+        if (!link.textContent.trim() && !link.hasAttribute('aria-label')) {
+          issues.push({
+            title: 'Link without text',
+            description: 'Links should have text or aria-label',
+            severity: 'error',
+            selector: this.getSelector(link)
+          });
+        }
+      });
 
       this.data.accessibility = issues;
     }
@@ -1699,6 +2196,12 @@
           description: 'Every page should have a descriptive title tag',
           severity: 'error'
         });
+      } else if (title.textContent.length < 30) {
+        issues.push({
+          title: 'Page title too short',
+          description: `Title is ${title.textContent.length} characters. Aim for 30-60 characters.`,
+          severity: 'info'
+        });
       } else if (title.textContent.length > 60) {
         issues.push({
           title: 'Page title too long',
@@ -1715,10 +2218,65 @@
           description: 'Add a meta description to improve search results',
           severity: 'warning'
         });
+      } else if (description.content.length < 120) {
+        issues.push({
+          title: 'Meta description too short',
+          description: `Description is ${description.content.length} characters. Aim for 120-160 characters.`,
+          severity: 'info'
+        });
       } else if (description.content.length > 160) {
         issues.push({
           title: 'Meta description too long',
           description: `Description is ${description.content.length} characters. Keep it under 160.`,
+          severity: 'info'
+        });
+      }
+
+      // Check canonical URL
+      const canonical = document.querySelector('link[rel="canonical"]');
+      if (!canonical) {
+        issues.push({
+          title: 'Missing canonical URL',
+          description: 'Add a canonical URL to prevent duplicate content issues',
+          severity: 'info'
+        });
+      }
+
+      // Check Open Graph tags
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      const ogDescription = document.querySelector('meta[property="og:description"]');
+      const ogImage = document.querySelector('meta[property="og:image"]');
+
+      if (!ogTitle) {
+        issues.push({
+          title: 'Missing Open Graph title',
+          description: 'Add og:title for better social media sharing',
+          severity: 'info'
+        });
+      }
+
+      if (!ogDescription) {
+        issues.push({
+          title: 'Missing Open Graph description',
+          description: 'Add og:description for better social media sharing',
+          severity: 'info'
+        });
+      }
+
+      if (!ogImage) {
+        issues.push({
+          title: 'Missing Open Graph image',
+          description: 'Add og:image for better social media sharing',
+          severity: 'info'
+        });
+      }
+
+      // Check Twitter Card tags
+      const twitterCard = document.querySelector('meta[name="twitter:card"]');
+      if (!twitterCard) {
+        issues.push({
+          title: 'Missing Twitter Card',
+          description: 'Add Twitter Card meta tags for better Twitter sharing',
           severity: 'info'
         });
       }
@@ -1736,6 +2294,46 @@
           title: 'Multiple H1 tags found',
           description: `Found ${h1Tags.length} H1 tags. Use only one per page.`,
           severity: 'warning'
+        });
+      }
+
+      // Check robots meta
+      const robots = document.querySelector('meta[name="robots"]');
+      if (robots && robots.content.includes('noindex')) {
+        issues.push({
+          title: 'Page is set to noindex',
+          description: 'This page will not be indexed by search engines',
+          severity: 'warning'
+        });
+      }
+
+      // Check for language attribute
+      const htmlLang = document.documentElement.getAttribute('lang');
+      if (!htmlLang) {
+        issues.push({
+          title: 'Missing language attribute',
+          description: 'Add lang attribute to <html> tag for better accessibility and SEO',
+          severity: 'warning'
+        });
+      }
+
+      // Check mobile viewport
+      const viewport = document.querySelector('meta[name="viewport"]');
+      if (!viewport) {
+        issues.push({
+          title: 'Missing viewport meta tag',
+          description: 'Add viewport meta tag for mobile optimization',
+          severity: 'error'
+        });
+      }
+
+      // Check favicon
+      const favicon = document.querySelector('link[rel="icon"], link[rel="shortcut icon"]');
+      if (!favicon) {
+        issues.push({
+          title: 'Missing favicon',
+          description: 'Add a favicon for better branding',
+          severity: 'info'
         });
       }
 
@@ -1762,6 +2360,15 @@
           });
         }
       });
+
+      // Check for HTTPS
+      if (window.location.protocol !== 'https:') {
+        issues.push({
+          title: 'Site not using HTTPS',
+          description: 'Use HTTPS for better security and SEO',
+          severity: 'warning'
+        });
+      }
 
       this.data.seo = issues;
     }
@@ -1807,13 +2414,40 @@
     auditNetwork() {
       const resources = performance.getEntriesByType('resource');
 
-      this.data.network = resources.map(resource => ({
-        name: resource.name,
-        type: resource.initiatorType,
-        size: resource.transferSize || 0,
-        duration: resource.duration,
-        status: resource.responseStatus || 200
-      }));
+      this.data.network = resources.map(resource => {
+        const url = resource.name;
+        let category = 'other';
+
+        // Categorize resources
+        if (url.includes('webflow.com') || url.includes('webflow.io')) {
+          category = 'webflow-cdn';
+        } else if (url.includes('uploads-ssl.webflow.com') || url.includes('assets.website-files.com')) {
+          category = 'user-uploads';
+        } else if (url.includes('google-analytics.com') || url.includes('googletagmanager.com') ||
+                   url.includes('facebook.') || url.includes('hotjar.') || url.includes('segment.')) {
+          category = 'analytics';
+        } else if (url.includes('fonts.googleapis.com') || url.includes('fonts.gstatic.com') ||
+                   url.includes('use.typekit.net')) {
+          category = 'fonts';
+        } else if (url.match(/\.(jpg|jpeg|png|gif|webp|svg)/i)) {
+          category = 'images';
+        } else if (url.match(/\.css/i)) {
+          category = 'stylesheets';
+        } else if (url.match(/\.js/i)) {
+          category = 'scripts';
+        } else if (!url.startsWith(window.location.origin)) {
+          category = 'third-party';
+        }
+
+        return {
+          name: resource.name,
+          type: resource.initiatorType,
+          size: resource.transferSize || 0,
+          duration: resource.duration,
+          status: resource.responseStatus || 200,
+          category: category
+        };
+      });
     }
 
     /**

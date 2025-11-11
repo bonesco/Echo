@@ -2,8 +2,23 @@
 
 A sophisticated, production-ready debugging tool for Webflow websites with a modern, high-end UI inspired by Linear and Raycast.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
+
+## 🎉 What's New in v2.0
+
+- **🔍 Advanced Search**: Real-time search across Errors, Accessibility, SEO, and Network tabs
+- **⌨️ Enhanced Keyboard Shortcuts**: New shortcuts for Export (Cmd/Ctrl+Shift+E) and Refresh (Cmd/Ctrl+Shift+R)
+- **🎨 Webflow Detection Enhancements**:
+  - CMS field bindings (data-w-bind) detection
+  - Detailed Webflow Forms analysis
+  - E-commerce detection (products, cart)
+  - Third-party integrations (Google Analytics, Facebook Pixel, Hotjar, Intercom, Segment)
+  - JavaScript library detection (jQuery, GSAP, Swiper, Slick, Vimeo, YouTube)
+- **🔒 Custom Code Analysis**: Security issue detection (inline event handlers, document.write, global pollution)
+- **♿ Enhanced Accessibility**: Heading hierarchy checks, landmark detection, alt text validation
+- **🔎 Comprehensive SEO**: Open Graph, Twitter Cards, canonical URLs, robots meta, HTTPS validation
+- **🌐 Smart Network Categorization**: Automatic categorization of Webflow CDN, user uploads, analytics, and third-party resources
 
 ## Features
 
@@ -21,6 +36,12 @@ A sophisticated, production-ready debugging tool for Webflow websites with a mod
 - Current breakpoint tracking (desktop/tablet/mobile/landscape)
 - Active interactions and triggers
 - CMS collection bindings and item counts
+- **NEW:** CMS field detection (data-w-bind attributes)
+- **NEW:** Webflow Forms analysis (fields, redirects, required fields)
+- **NEW:** E-commerce detection (products, cart configuration)
+- **NEW:** Third-party integrations (Google Analytics, Facebook Pixel, Hotjar, etc.)
+- **NEW:** JavaScript library detection (jQuery, GSAP, Swiper, Vimeo, YouTube)
+- **NEW:** Custom code analysis (security issues, performance anti-patterns)
 - Custom code block detection (head/body/embed)
 - Webflow.js version identification
 
@@ -51,24 +72,42 @@ A sophisticated, production-ready debugging tool for Webflow websites with a mod
 ### ♿ Accessibility Auditing
 - Missing alt tags on images
 - Empty alt attributes
+- **NEW:** Alt text length validation (max 125 chars)
 - Missing form labels
 - Missing ARIA labels on buttons
+- **NEW:** Heading hierarchy validation (no skipped levels)
+- **NEW:** Missing landmark elements (main, nav)
+- **NEW:** Links without href or empty text
 - Form input accessibility checks
 
 ### 🔎 SEO Analysis
-- Meta title presence and length validation
-- Meta description optimization
+- Meta title presence and length validation (30-60 chars)
+- Meta description optimization (120-160 chars)
+- **NEW:** Canonical URL validation
+- **NEW:** Open Graph tags (og:title, og:description, og:image)
+- **NEW:** Twitter Card tags
+- **NEW:** Robots meta tag detection
+- **NEW:** Language attribute validation
+- **NEW:** Viewport meta tag check
+- **NEW:** Favicon presence
+- **NEW:** HTTPS usage validation
 - H1 tag usage (should be exactly one)
 - Broken image detection
 - Image optimization opportunities
-- Mobile-friendliness checks
 
 ### 🌐 Network Monitoring
 - All HTTP requests tracking
 - Failed requests (404s, 500s)
 - Slow-loading assets (>3s)
 - Resource size and duration
-- Request type categorization
+- **NEW:** Smart resource categorization:
+  - Webflow CDN resources
+  - User-uploaded assets
+  - Third-party scripts
+  - Analytics/tracking
+  - Fonts and icons
+  - Images, stylesheets, scripts
+- **NEW:** Search functionality on network requests
 
 ### 🎯 CSS/Layout Issue Detection
 - Horizontal overflow detection
@@ -120,7 +159,9 @@ Add this to your Webflow site's custom code (for development only):
 
 ### Keyboard Shortcuts
 
-- **`Cmd/Ctrl + Shift + D`**: Toggle the debug console
+- **`Cmd/Ctrl + Shift + D`**: Toggle minimize/maximize console
+- **`Cmd/Ctrl + Shift + E`**: Export report (NEW)
+- **`Cmd/Ctrl + Shift + R`**: Refresh all audits (NEW)
 - **Click issues**: Highlights the element on the page
 - **Scroll to element**: Automatically scrolls to problematic elements
 
