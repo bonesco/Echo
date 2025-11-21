@@ -2,8 +2,35 @@
 
 A sophisticated, production-ready debugging tool for Webflow websites with a modern, high-end UI inspired by Linear and Raycast.
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
+
+## 🚀 What's New in v3.0 (The Ultimate Release!)
+
+### ⚙️ Settings Panel
+- **Customizable Audits**: Toggle individual audits on/off (Performance, Accessibility, SEO, Errors, Network, Webflow, CSS)
+- **Custom Performance Thresholds**: Set your own thresholds for LCP, FID, CLS, TTFB, and FCP
+- **Performance History Tracking**: Track performance over time with automatic snapshots
+- **Persistent Settings**: Your preferences are saved in localStorage
+
+### 🎭 Deep IX2 Analysis
+- **Interactions 2.0 Parsing**: Full IX2 engine state analysis
+- **Event Detection**: Capture all IX2 events with triggers and actions
+- **Action Lists**: Parse action item groups and animation sequences
+- **Engine Identification**: Distinguish between IX2, IX1 (Legacy), and Native animations
+- **Performance Impact**: See which interactions are affecting page performance
+
+### 📊 Performance History
+- **Historical Tracking**: Automatic performance snapshots over time
+- **Trend Analysis**: View performance improvements or regressions
+- **Score Evolution**: Track your performance score changes
+- **Up to 50 Snapshots**: Stored locally with timestamps and URLs
+
+### 🎨 WCAG Color Contrast Analyzer
+- **Automatic Contrast Checking**: Analyzes text elements against backgrounds
+- **WCAG AA Compliance**: Tests against 4.5:1 (normal text) and 3:1 (large text) standards
+- **Smart Background Detection**: Walks up DOM tree to find actual background colors
+- **Font Size Awareness**: Adjusts requirements based on text size and weight
 
 ## 🎉 What's New in v2.0
 
@@ -29,23 +56,27 @@ A sophisticated, production-ready debugging tool for Webflow websites with a mod
 - **Draggable Interface**: Move the console anywhere on screen
 - **Minimizable**: Collapse to a floating button in the bottom-right
 - **Expandable**: Full-screen view for detailed analysis
+- **⚙️ Settings Panel**: Customize audits, thresholds, and options (NEW in v3.0)
 - **Keyboard Shortcuts**: `Cmd/Ctrl + Shift + D` to toggle
 
 ### 🔍 Webflow-Specific Debugging
 - Site ID and environment detection
 - Current breakpoint tracking (desktop/tablet/mobile/landscape)
-- Active interactions and triggers
+- **🎭 Deep IX2 Analysis**: Full Interactions 2.0 engine parsing (v3.0)
+- Active interactions and triggers (IX2, IX1 Legacy, Native animations)
 - CMS collection bindings and item counts
-- **NEW:** CMS field detection (data-w-bind attributes)
-- **NEW:** Webflow Forms analysis (fields, redirects, required fields)
-- **NEW:** E-commerce detection (products, cart configuration)
-- **NEW:** Third-party integrations (Google Analytics, Facebook Pixel, Hotjar, etc.)
-- **NEW:** JavaScript library detection (jQuery, GSAP, Swiper, Vimeo, YouTube)
-- **NEW:** Custom code analysis (security issues, performance anti-patterns)
+- CMS field detection (data-w-bind attributes)
+- Webflow Forms analysis (fields, redirects, required fields)
+- E-commerce detection (products, cart configuration)
+- Third-party integrations (Google Analytics, Facebook Pixel, Hotjar, etc.)
+- JavaScript library detection (jQuery, GSAP, Swiper, Vimeo, YouTube)
+- Custom code analysis (security issues, performance anti-patterns)
 - Custom code block detection (head/body/embed)
 - Webflow.js version identification
 
 ### ⚡ Performance Monitoring
+- **📊 Performance History**: Track metrics over time with automatic snapshots (v3.0)
+- **⚙️ Custom Thresholds**: Set your own performance goals (v3.0)
 - **Core Web Vitals**:
   - Largest Contentful Paint (LCP)
   - First Input Delay (FID)
@@ -70,14 +101,15 @@ A sophisticated, production-ready debugging tool for Webflow websites with a mod
 - Toast notifications for new errors
 
 ### ♿ Accessibility Auditing
+- **🎨 WCAG Color Contrast Analyzer**: Automatic contrast ratio checking (v3.0)
 - Missing alt tags on images
 - Empty alt attributes
-- **NEW:** Alt text length validation (max 125 chars)
+- Alt text length validation (max 125 chars)
 - Missing form labels
 - Missing ARIA labels on buttons
-- **NEW:** Heading hierarchy validation (no skipped levels)
-- **NEW:** Missing landmark elements (main, nav)
-- **NEW:** Links without href or empty text
+- Heading hierarchy validation (no skipped levels)
+- Missing landmark elements (main, nav)
+- Links without href or empty text
 - Form input accessibility checks
 
 ### 🔎 SEO Analysis

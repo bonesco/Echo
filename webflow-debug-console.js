@@ -42,6 +42,33 @@
       this.activeTab = 'overview';
       this.consoleErrors = [];
       this.searchTerm = '';
+      this.showSettings = false;
+
+      // Settings with defaults
+      this.settings = this.loadSettings() || {
+        audits: {
+          performance: true,
+          accessibility: true,
+          seo: true,
+          errors: true,
+          network: true,
+          webflow: true,
+          css: true
+        },
+        thresholds: {
+          lcp: 2500,
+          fid: 100,
+          cls: 0.1,
+          ttfb: 600,
+          fcp: 1800
+        },
+        autoRefresh: false,
+        refreshInterval: 30000,
+        trackHistory: true
+      };
+
+      // Performance history
+      this.performanceHistory = this.loadPerformanceHistory() || [];
 
       this.init();
     }
@@ -723,6 +750,142 @@
           transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* Settings Modal */
+        .wdc-settings-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.8);
+          backdrop-filter: blur(8px);
+          z-index: 1000000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        .wdc-settings-content {
+          background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(99, 102, 241, 0.2);
+          border-radius: 16px;
+          width: 600px;
+          max-height: 80vh;
+          overflow-y: auto;
+          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+          animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+          from {
+            transform: translateY(20px);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+
+        .wdc-settings-header {
+          padding: 24px;
+          border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .wdc-settings-title {
+          font-size: 24px;
+          font-weight: 700;
+          color: #F1F5F9;
+        }
+
+        .wdc-settings-body {
+          padding: 24px;
+        }
+
+        .wdc-settings-section {
+          margin-bottom: 32px;
+        }
+
+        .wdc-settings-section-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: #94A3B8;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 16px;
+        }
+
+        .wdc-setting-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px;
+          background: rgba(30, 41, 59, 0.4);
+          border-radius: 8px;
+          margin-bottom: 8px;
+        }
+
+        .wdc-setting-label {
+          font-size: 14px;
+          color: #E2E8F0;
+        }
+
+        .wdc-toggle {
+          position: relative;
+          width: 44px;
+          height: 24px;
+          background: rgba(100, 116, 139, 0.3);
+          border-radius: 12px;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        .wdc-toggle.active {
+          background: linear-gradient(135deg, #6366F1 0%, #3B82F6 100%);
+        }
+
+        .wdc-toggle-knob {
+          position: absolute;
+          top: 3px;
+          left: 3px;
+          width: 18px;
+          height: 18px;
+          background: white;
+          border-radius: 50%;
+          transition: transform 0.2s;
+        }
+
+        .wdc-toggle.active .wdc-toggle-knob {
+          transform: translateX(20px);
+        }
+
+        .wdc-input {
+          padding: 8px 12px;
+          background: rgba(30, 41, 59, 0.6);
+          border: 1px solid rgba(99, 102, 241, 0.2);
+          border-radius: 6px;
+          color: #F1F5F9;
+          font-size: 14px;
+          width: 100px;
+          text-align: center;
+        }
+
+        .wdc-input:focus {
+          outline: none;
+          border-color: #6366F1;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
         /* Utility Classes */
         .wdc-mt-4 { margin-top: 16px; }
         .wdc-mb-4 { margin-bottom: 16px; }
@@ -756,6 +919,7 @@
           </div>
           <div class="wdc-header-right">
             <button class="wdc-btn wdc-btn-primary wdc-export-btn">Export Report</button>
+            <button class="wdc-btn wdc-btn-icon wdc-settings-btn">⚙</button>
             <button class="wdc-btn wdc-btn-icon wdc-minimize-btn">−</button>
             <button class="wdc-btn wdc-btn-icon wdc-expand-btn">⛶</button>
             <button class="wdc-btn wdc-btn-icon wdc-close-btn">×</button>
@@ -812,6 +976,11 @@
       // Export button
       shadow.querySelector('.wdc-export-btn').addEventListener('click', () => {
         this.exportReport();
+      });
+
+      // Settings button
+      shadow.querySelector('.wdc-settings-btn').addEventListener('click', () => {
+        this.toggleSettings();
       });
 
       // Keyboard shortcuts
@@ -901,6 +1070,215 @@
       this.observers.forEach(observer => observer.disconnect());
       this.container.remove();
       window.__WEBFLOW_DEBUG_CONSOLE__ = false;
+    }
+
+    /**
+     * Toggle settings modal
+     */
+    toggleSettings() {
+      this.showSettings = !this.showSettings;
+
+      if (this.showSettings) {
+        this.renderSettingsModal();
+      } else {
+        const modal = this.shadow.querySelector('.wdc-settings-modal');
+        if (modal) modal.remove();
+      }
+    }
+
+    /**
+     * Render settings modal
+     */
+    renderSettingsModal() {
+      // Remove existing modal
+      const existing = this.shadow.querySelector('.wdc-settings-modal');
+      if (existing) existing.remove();
+
+      const modal = document.createElement('div');
+      modal.className = 'wdc-settings-modal';
+      modal.innerHTML = `
+        <div class="wdc-settings-content">
+          <div class="wdc-settings-header">
+            <h2 class="wdc-settings-title">Settings</h2>
+            <button class="wdc-btn wdc-btn-icon wdc-settings-close">×</button>
+          </div>
+          <div class="wdc-settings-body">
+            <div class="wdc-settings-section">
+              <div class="wdc-settings-section-title">Enable Audits</div>
+              ${this.renderAuditToggles()}
+            </div>
+
+            <div class="wdc-settings-section">
+              <div class="wdc-settings-section-title">Performance Thresholds</div>
+              ${this.renderThresholdInputs()}
+            </div>
+
+            <div class="wdc-settings-section">
+              <div class="wdc-settings-section-title">Options</div>
+              ${this.renderGeneralOptions()}
+            </div>
+
+            <div style="text-align: center; margin-top: 24px;">
+              <button class="wdc-btn wdc-btn-primary wdc-save-settings">Save Settings</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      this.shadow.appendChild(modal);
+
+      // Close button
+      modal.querySelector('.wdc-settings-close').addEventListener('click', () => {
+        this.toggleSettings();
+      });
+
+      // Click outside to close
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.toggleSettings();
+        }
+      });
+
+      // Save button
+      modal.querySelector('.wdc-save-settings').addEventListener('click', () => {
+        this.saveSettingsFromModal();
+        this.toggleSettings();
+        this.showToast('Settings Saved', 'Your preferences have been updated');
+      });
+
+      // Toggle handlers
+      modal.querySelectorAll('.wdc-toggle').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+          toggle.classList.toggle('active');
+        });
+      });
+    }
+
+    renderAuditToggles() {
+      const audits = [
+        { key: 'performance', label: 'Performance Monitoring' },
+        { key: 'accessibility', label: 'Accessibility Auditing' },
+        { key: 'seo', label: 'SEO Analysis' },
+        { key: 'errors', label: 'Error Tracking' },
+        { key: 'network', label: 'Network Monitoring' },
+        { key: 'webflow', label: 'Webflow Detection' },
+        { key: 'css', label: 'CSS/Layout Issues' }
+      ];
+
+      return audits.map(audit => `
+        <div class="wdc-setting-item">
+          <span class="wdc-setting-label">${audit.label}</span>
+          <div class="wdc-toggle ${this.settings.audits[audit.key] ? 'active' : ''}" data-audit="${audit.key}">
+            <div class="wdc-toggle-knob"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    renderThresholdInputs() {
+      const thresholds = [
+        { key: 'lcp', label: 'LCP (ms)', value: this.settings.thresholds.lcp },
+        { key: 'fid', label: 'FID (ms)', value: this.settings.thresholds.fid },
+        { key: 'cls', label: 'CLS', value: this.settings.thresholds.cls },
+        { key: 'ttfb', label: 'TTFB (ms)', value: this.settings.thresholds.ttfb },
+        { key: 'fcp', label: 'FCP (ms)', value: this.settings.thresholds.fcp }
+      ];
+
+      return thresholds.map(threshold => `
+        <div class="wdc-setting-item">
+          <span class="wdc-setting-label">${threshold.label}</span>
+          <input type="number" class="wdc-input" data-threshold="${threshold.key}" value="${threshold.value}" />
+        </div>
+      `).join('');
+    }
+
+    renderGeneralOptions() {
+      return `
+        <div class="wdc-setting-item">
+          <span class="wdc-setting-label">Track Performance History</span>
+          <div class="wdc-toggle ${this.settings.trackHistory ? 'active' : ''}" data-option="trackHistory">
+            <div class="wdc-toggle-knob"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    saveSettingsFromModal() {
+      const modal = this.shadow.querySelector('.wdc-settings-modal');
+
+      // Save audit toggles
+      modal.querySelectorAll('[data-audit]').forEach(toggle => {
+        const key = toggle.dataset.audit;
+        this.settings.audits[key] = toggle.classList.contains('active');
+      });
+
+      // Save thresholds
+      modal.querySelectorAll('[data-threshold]').forEach(input => {
+        const key = input.dataset.threshold;
+        this.settings.thresholds[key] = parseFloat(input.value);
+      });
+
+      // Save options
+      modal.querySelectorAll('[data-option]').forEach(toggle => {
+        const key = toggle.dataset.option;
+        this.settings[key] = toggle.classList.contains('active');
+      });
+
+      this.saveSettings();
+    }
+
+    loadSettings() {
+      try {
+        const saved = localStorage.getItem('wdc_settings');
+        return saved ? JSON.parse(saved) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    saveSettings() {
+      try {
+        localStorage.setItem('wdc_settings', JSON.stringify(this.settings));
+      } catch (e) {
+        console.error('Failed to save settings:', e);
+      }
+    }
+
+    loadPerformanceHistory() {
+      try {
+        const saved = localStorage.getItem('wdc_performance_history');
+        return saved ? JSON.parse(saved) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    savePerformanceHistory() {
+      try {
+        // Keep only last 50 entries
+        const history = this.performanceHistory.slice(-50);
+        localStorage.setItem('wdc_performance_history', JSON.stringify(history));
+      } catch (e) {
+        console.error('Failed to save performance history:', e);
+      }
+    }
+
+    recordPerformanceSnapshot() {
+      if (!this.settings.trackHistory) return;
+
+      const snapshot = {
+        timestamp: Date.now(),
+        url: window.location.href,
+        lcp: this.data.performance.lcp || 0,
+        fid: this.data.performance.fid || 0,
+        cls: this.data.performance.cls || 0,
+        ttfb: this.data.performance.ttfb || 0,
+        fcp: this.data.performance.fcp || 0,
+        score: this.calculatePerformanceScore()
+      };
+
+      this.performanceHistory.push(snapshot);
+      this.savePerformanceHistory();
     }
 
     /**
@@ -1366,25 +1744,34 @@
 
         <div class="wdc-card wdc-mt-4">
           <div class="wdc-card-header">
-            <span class="wdc-card-title">Interactions</span>
+            <span class="wdc-card-title">Interactions (${wf.interactions ? wf.interactions.length : 0})</span>
           </div>
           ${wf.interactions && wf.interactions.length > 0 ? `
             <table class="wdc-table">
               <thead>
                 <tr>
+                  <th>Engine</th>
                   <th>Type</th>
                   <th>Trigger</th>
-                  <th>Target</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                ${wf.interactions.map(interaction => `
+                ${wf.interactions.slice(0, 20).map(interaction => `
                   <tr>
+                    <td><span class="wdc-issue-severity ${interaction.engine === 'IX2' ? 'info' : interaction.engine === 'IX1' ? 'warning' : 'info'}">${interaction.engine}</span></td>
                     <td>${interaction.type}</td>
                     <td><code>${interaction.trigger}</code></td>
-                    <td><code>${interaction.target}</code></td>
+                    <td><code>${interaction.action || '—'}</code></td>
                   </tr>
                 `).join('')}
+                ${wf.interactions.length > 20 ? `
+                  <tr>
+                    <td colspan="4" style="text-align: center; color: #94A3B8; font-style: italic;">
+                      ... and ${wf.interactions.length - 20} more interactions
+                    </td>
+                  </tr>
+                ` : ''}
               </tbody>
             </table>
           ` : `
@@ -1625,14 +2012,19 @@
      * Run all audits
      */
     async runAllAudits() {
-      await Promise.all([
-        this.auditWebflow(),
-        this.auditPerformance(),
-        this.auditAccessibility(),
-        this.auditSEO(),
-        this.auditCSS(),
-        this.auditNetwork()
-      ]);
+      const audits = [];
+
+      if (this.settings.audits.webflow) audits.push(this.auditWebflow());
+      if (this.settings.audits.performance) audits.push(this.auditPerformance());
+      if (this.settings.audits.accessibility) audits.push(this.auditAccessibility());
+      if (this.settings.audits.seo) audits.push(this.auditSEO());
+      if (this.settings.audits.css) audits.push(this.auditCSS());
+      if (this.settings.audits.network) audits.push(this.auditNetwork());
+
+      await Promise.all(audits);
+
+      // Record performance snapshot
+      this.recordPerformanceSnapshot();
 
       // Update UI
       this.updateBadges();
@@ -1709,22 +2101,85 @@
     }
 
     /**
-     * Detect Webflow interactions
+     * Detect Webflow interactions (including deep IX2 analysis)
      */
     detectInteractions() {
       const interactions = [];
 
-      // Look for interaction attributes
+      // IX2 (Interactions 2.0) Deep Analysis
+      if (window.Webflow && window.Webflow.require) {
+        try {
+          const ix2 = window.Webflow.require('ix2');
+          if (ix2 && ix2.store) {
+            const state = ix2.store.getState();
+
+            if (state && state.ixData) {
+              const ixData = state.ixData;
+
+              // Parse events
+              if (ixData.events) {
+                Object.values(ixData.events).forEach(event => {
+                  interactions.push({
+                    type: 'IX2',
+                    trigger: event.eventTypeId || 'unknown',
+                    action: event.action ? event.action.actionTypeId : 'unknown',
+                    target: event.target || 'unknown',
+                    engine: 'IX2'
+                  });
+                });
+              }
+
+              // Parse action lists
+              if (ixData.actionLists) {
+                Object.entries(ixData.actionLists).forEach(([id, actionList]) => {
+                  if (actionList.actionItemGroups) {
+                    actionList.actionItemGroups.forEach(group => {
+                      group.actionItems?.forEach(item => {
+                        interactions.push({
+                          type: 'IX2 Action',
+                          trigger: actionList.useFirstGroupAsInitialState ? 'Initial State' : 'Triggered',
+                          action: item.actionTypeId || 'transform',
+                          target: `Action List ${id}`,
+                          engine: 'IX2'
+                        });
+                      });
+                    });
+                  }
+                });
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('IX2 parsing failed:', e);
+        }
+      }
+
+      // IX1 (Legacy Interactions) Detection
       document.querySelectorAll('[data-w-id]').forEach(el => {
-        const interactionType = el.dataset.wId ? 'element-interaction' : 'unknown';
         interactions.push({
-          type: interactionType,
-          trigger: 'click', // This would need more detection logic
-          target: el.tagName.toLowerCase()
+          type: 'IX1 (Legacy)',
+          trigger: 'element-based',
+          action: 'various',
+          target: el.tagName.toLowerCase(),
+          engine: 'IX1',
+          selector: this.getSelector(el)
         });
       });
 
-      return interactions.slice(0, 10); // Limit to 10 for performance
+      // Animation-specific elements
+      const animatedElements = document.querySelectorAll('[data-animation], .w-animate');
+      animatedElements.forEach(el => {
+        interactions.push({
+          type: 'Animation',
+          trigger: 'page-load',
+          action: 'animate',
+          target: el.tagName.toLowerCase(),
+          engine: 'Native',
+          selector: this.getSelector(el)
+        });
+      });
+
+      return interactions;
     }
 
     /**
@@ -2179,7 +2634,101 @@
         }
       });
 
+      // Color contrast check (simplified WCAG AA)
+      const textElements = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, span, a, button, li');
+      let contrastChecked = 0;
+
+      textElements.forEach(el => {
+        if (contrastChecked >= 20) return; // Limit for performance
+
+        const text = el.textContent.trim();
+        if (!text || text.length < 3) return;
+
+        try {
+          const style = window.getComputedStyle(el);
+          const color = style.color;
+          const bgColor = this.getBackgroundColor(el);
+
+          if (color && bgColor) {
+            const contrast = this.getContrastRatio(color, bgColor);
+            const fontSize = parseFloat(style.fontSize);
+            const fontWeight = style.fontWeight;
+
+            // WCAG AA requires 4.5:1 for normal text, 3:1 for large text
+            const isLargeText = fontSize >= 18 || (fontSize >= 14 && parseInt(fontWeight) >= 700);
+            const requiredRatio = isLargeText ? 3 : 4.5;
+
+            if (contrast < requiredRatio) {
+              contrastChecked++;
+              issues.push({
+                title: 'Low color contrast',
+                description: `Contrast ratio ${contrast.toFixed(2)}:1 (requires ${requiredRatio}:1 for WCAG AA)`,
+                severity: 'warning',
+                selector: this.getSelector(el)
+              });
+            }
+          }
+        } catch (e) {
+          // Skip elements that can't be analyzed
+        }
+      });
+
       this.data.accessibility = issues;
+    }
+
+    /**
+     * Get background color of element (walks up DOM tree)
+     */
+    getBackgroundColor(el) {
+      while (el) {
+        const style = window.getComputedStyle(el);
+        const bgColor = style.backgroundColor;
+
+        if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+          return bgColor;
+        }
+
+        el = el.parentElement;
+      }
+
+      return 'rgb(255, 255, 255)'; // Default to white
+    }
+
+    /**
+     * Calculate contrast ratio between two colors
+     */
+    getContrastRatio(color1, color2) {
+      const lum1 = this.getLuminance(color1);
+      const lum2 = this.getLuminance(color2);
+
+      const brightest = Math.max(lum1, lum2);
+      const darkest = Math.min(lum1, lum2);
+
+      return (brightest + 0.05) / (darkest + 0.05);
+    }
+
+    /**
+     * Get relative luminance of a color
+     */
+    getLuminance(color) {
+      const rgb = this.parseColor(color);
+      const [r, g, b] = rgb.map(val => {
+        val = val / 255;
+        return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+      });
+
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    }
+
+    /**
+     * Parse color string to RGB array
+     */
+    parseColor(color) {
+      const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (match) {
+        return [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])];
+      }
+      return [0, 0, 0];
     }
 
     /**
